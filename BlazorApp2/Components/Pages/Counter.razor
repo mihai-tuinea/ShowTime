@@ -9,11 +9,18 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
+<Button Color="Color.Primary" Clicked="@LowerCount">Don't Click me</Button>
+
 @code {
     private int currentCount = 0;
 
     private void IncrementCount()
     {
         currentCount++;
+    }
+
+    private void LowerCount()
+    {
+        currentCount--;
     }
 }
