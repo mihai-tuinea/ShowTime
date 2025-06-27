@@ -1,6 +1,6 @@
-﻿namespace ShowTime.Interfaces
+﻿namespace ShowTime.Repositories.Interfaces
 {
-    public interface IRepositoryBase<T>
+    public interface IBaseRepository<T>
     {
         Task<T> GetByIdAsync(int id);
         Task<IEnumerable<T>> GetAllAsync();
