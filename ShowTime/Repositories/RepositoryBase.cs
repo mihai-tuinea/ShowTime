@@ -1,8 +1,8 @@
-﻿using BlazorApp2.Context;
-using BlazorApp2.Interfaces;
+﻿using ShowTime.Context;
+using ShowTime.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlazorApp2.Repositories
+namespace ShowTime.Repositories
 {
     public class RepositoryBase<T> : IRepositoryBase<T> where T : class
     {

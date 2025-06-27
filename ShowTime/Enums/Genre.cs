@@ -1,4 +1,4 @@
-﻿namespace BlazorApp2.Enums
+﻿namespace ShowTime.Enums
 {
     public enum Genre
     {

@@ -1,6 +1,6 @@
-using BlazorApp2.Components;
-using BlazorApp2.Interfaces;
-using BlazorApp2.Repositories;
+using ShowTime.Components;
+using ShowTime.Interfaces;
+using ShowTime.Repositories;
 using Blazorise;
 
 using Blazorise.Bootstrap5;
@@ -21,7 +21,7 @@ builder.Services
     .AddBootstrap5Providers()
     .AddFontAwesomeIcons();
 
-builder.Services.AddDbContext<BlazorApp2.Context.ShowTimeContext>(options =>
+builder.Services.AddDbContext<ShowTime.Context.ShowTimeContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnectionString")));
 
 builder.Services.AddScoped<IRepositoryBand, RepositoryBand>();

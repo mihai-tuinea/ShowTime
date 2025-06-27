@@ -1,4 +1,4 @@
-﻿namespace BlazorApp2.Interfaces
+﻿namespace ShowTime.Interfaces
 {
     public interface IRepositoryBase<T>
     {

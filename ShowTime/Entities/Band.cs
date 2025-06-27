@@ -1,6 +1,6 @@
-﻿using BlazorApp2.Enums;
+﻿using ShowTime.Enums;
 
-namespace BlazorApp2.Entities
+namespace ShowTime.Entities
 {
     public class Band
     {

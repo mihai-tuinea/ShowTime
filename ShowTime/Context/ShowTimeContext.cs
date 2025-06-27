@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using BlazorApp2.Entities;
+using ShowTime.Entities;
 
-namespace BlazorApp2.Context
+namespace ShowTime.Context
 {
     public class ShowTimeContext : DbContext
     {

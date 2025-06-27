@@ -1,6 +1,6 @@
-﻿using BlazorApp2.Entities;
+﻿using ShowTime.Entities;
 
-namespace BlazorApp2.Interfaces
+namespace ShowTime.Interfaces
 {
     public interface IRepositoryBand : IRepositoryBase<Band>
     {

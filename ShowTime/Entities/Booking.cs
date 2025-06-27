@@ -1,4 +1,4 @@
-﻿namespace BlazorApp2.Entities
+﻿namespace ShowTime.Entities
 {
     public class Booking
     {
