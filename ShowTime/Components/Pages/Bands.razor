@@ -1,0 +1,25 @@
+﻿@page "/bands"
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Bands</PageTitle>
+
+<h1>Bands</h1>
+
+<DataGrid TItem="Band"
+          Data="@bandsList">
+    <DataGridColumn TItem="Band" Field="@nameof(Band.Name)" />
+    <DataGridColumn TItem="Band" Field="@nameof(Band.Genre)" />
+</DataGrid>
+
+<Button Color="Color.Primary" Clicked="@(e => NavigationManager.NavigateTo("/bands/create"))">Create</Button>
+
+@code {
+    [Inject]
+    public required IBandRepository BandRepository { get; set; }
+    private List<Band>? bandsList;
+    protected override async Task OnInitializedAsync()
+    {
+        bandsList = (await BandRepository.GetAllAsync()).ToList();
+    }
+}

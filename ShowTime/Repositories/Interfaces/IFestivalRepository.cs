@@ -2,7 +2,7 @@
 
 namespace ShowTime.Repositories.Interfaces
 {
-    public interface IFestivalRepository :IBaseRepository<Festival>
+    public interface IFestivalRepository : IBaseRepository<Festival>
     {
     }
 }

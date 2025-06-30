@@ -2,7 +2,7 @@
 
 namespace ShowTime.Repositories.Interfaces
 {
-    public interface IMemberRepository:IBaseRepository<Member>
+    public interface IMemberRepository : IBaseRepository<Member>
     {
     }
 }

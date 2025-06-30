@@ -4,6 +4,7 @@
     {
         Pop,
         Rap,
-        Rock
+        Rock,
+        Jazz
     }
 }
