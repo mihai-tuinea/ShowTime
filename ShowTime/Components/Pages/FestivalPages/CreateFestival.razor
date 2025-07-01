@@ -1,0 +1,47 @@
+﻿@page "/festivals/create"
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Create Festival</h3>
+
+<Fields>
+    <Field>
+        <Label>Name</Label>
+        <InputText @bind-Value="Festival.Name" />
+    </Field>
+    <Field>
+        <Label>Location</Label>
+        <InputText @bind-Value="Festival.Location" />
+    </Field>
+    <Field>
+        <Label>Start Date</Label>
+        <DateEdit @bind-Date="Festival.StartDate"
+                  Min="@DateTime.Today" />
+    </Field>
+    <Field>
+        <Label>End Date</Label>
+        <DateEdit @bind-Date="Festival.EndDate"
+                  Max="@DateTime.Today.AddYears(2)" />
+    </Field>
+</Fields>
+
+<Button Color="Color.Primary" Clicked="HandleSubmit">Save</Button>
+<Button Color="Color.Primary" Clicked="@(e => NavigationManager.NavigateTo("/festivals"))">Cancel</Button>
+
+@code {
+    private Festival Festival { get; set; } = new Festival
+    {
+        StartDate = DateTime.Today,
+        EndDate = DateTime.Today
+    };
+
+    [Inject]
+    public required IFestivalRepository FestivalRepository { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        await FestivalRepository.AddAsync(Festival);
+        await FestivalRepository.SaveChangesAsync();
+        NavigationManager.NavigateTo("/festivals");
+    }
+}

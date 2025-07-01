@@ -1,0 +1,37 @@
+﻿@page "/festivals"
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Festivals</PageTitle>
+
+<h1>Festivals</h1>
+
+<DataGrid TItem="Festival"
+          Data="@FestivalsList">
+    <DataGridColumn TItem="Festival" Field="@nameof(Festival.Name)" Caption="Festival Name" />
+    <DataGridColumn TItem="Festival" Field="@nameof(Festival.Location)" Caption="Location" />
+    <DataGridColumn TItem="Festival" Field="@nameof(Festival.StartDate)" Caption="Start Date">
+        <DisplayTemplate>
+            @context.StartDate.ToString("dd-MM-yyyy")
+        </DisplayTemplate>
+    </DataGridColumn>
+
+    <DataGridColumn TItem="Festival" Field="@nameof(Festival.EndDate)" Caption="End Date">
+        <DisplayTemplate>
+            @context.EndDate.ToString("dd-MM-yyyy")
+        </DisplayTemplate>
+    </DataGridColumn>
+
+</DataGrid>
+
+<Button Color="Color.Primary" Clicked="@(e => NavigationManager.NavigateTo("/festivals/create"))">Create</Button>
+
+@code {
+    [Inject]
+    public required IFestivalRepository FestivalRepository { get; set; }
+    private List<Festival>? FestivalsList;
+    protected override async Task OnInitializedAsync()
+    {
+        FestivalsList = (await FestivalRepository.GetAllAsync()).ToList();
+    }
+}

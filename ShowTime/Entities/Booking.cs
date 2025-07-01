@@ -3,11 +3,11 @@
     public class Booking
     {
         public Guid Id { get; set; }
-        public required string Email { get; set; }
+        public string Email { get; set; } // this will be replaced by user foreign key
         public DateTime Date { get; set; }
         public Guid FestivalId { get; set; }
-        public required Festival Festival { get; set; }
-        public Guid UserId { get; set; }
-        public required User User { get; set; }
+        public Festival Festival { get; set; }
+        // public Guid UserId { get; set; }
+        // public User User { get; set; }
     }
 }

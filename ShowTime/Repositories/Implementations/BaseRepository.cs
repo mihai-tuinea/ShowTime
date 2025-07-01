@@ -6,7 +6,7 @@ namespace ShowTime.Repositories.Implementations
 {
     public class BaseRepository<T> : IBaseRepository<T> where T : class
     {
-        private readonly ShowTimeContext _context;
+        protected readonly ShowTimeContext _context;
         private readonly DbSet<T> _dbSet;
 
         public BaseRepository(ShowTimeContext context)
@@ -24,7 +24,7 @@ namespace ShowTime.Repositories.Implementations
             _dbSet.Remove(entity);
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
         }

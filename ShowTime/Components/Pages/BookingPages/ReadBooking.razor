@@ -1,0 +1,28 @@
+﻿@page "/bookings"
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Bookings</PageTitle>
+
+<h1>Bands</h1>
+
+<DataGrid TItem="Booking" Data="@BookingsList">
+    <DataGridColumn TItem="Booking" Caption="Booked Festival">
+        <DisplayTemplate>
+            @context.Festival?.Name
+        </DisplayTemplate>
+    </DataGridColumn>
+    <DataGridColumn TItem="Booking" Field="@nameof(Booking.Email)" Caption="Email" />
+</DataGrid>
+
+<Button Color="Color.Primary" Clicked="@(e => NavigationManager.NavigateTo("/bookings/create"))">Create</Button>
+
+@code {
+    [Inject]
+    public required IBookingRepository BookingRepository { get; set; }
+    private List<Booking>? BookingsList;
+    protected override async Task OnInitializedAsync()
+    {
+        BookingsList = (await BookingRepository.GetAllAsync()).ToList();
+    }
+}
