@@ -5,7 +5,9 @@
 
 <h1>Bands</h1>
 
+<CreateBandModal @ref="_createModal" OnCreated="ReloadBands" />
 <DeleteBandModal @ref="_deleteModal" OnDeleted="ReloadBands" />
+<UpdateBandModal @ref="_updateModal" OnUpdated="ReloadBands" />
 
 <DataGrid TItem="Band"
           Data="@_bands">
@@ -14,7 +16,7 @@
 
     <DataGridColumn TItem="Band" Caption="Actions">
         <DisplayTemplate>
-            <Button Color="Color.Primary" Size="Size.Small" Clicked="e => UpdateSelectedBand(context)">
+            <Button Color="Color.Primary" Size="Size.Small" Clicked="e => ShowUpdateModal(context)">
                 <Blazorise.Icon Name="IconName.Edit" />
             </Button>
             <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(context)">
@@ -24,7 +26,7 @@
     </DataGridColumn>
 </DataGrid>
 
-<Button Color="Color.Primary" Clicked="@(e => NavigationManager.NavigateTo("/bands/create"))">Create</Button>
+<Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
 
 @code {
     [Inject]
@@ -33,7 +35,9 @@
     public required NavigationManager NavigationManager { get; set; }
 
     private IEnumerable<Band>? _bands;
+    private CreateBandModal? _createModal;
     private DeleteBandModal? _deleteModal;
+    private UpdateBandModal? _updateModal;
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,9 +49,19 @@
         NavigationManager.NavigateTo($"/bands/update/{band.Id}");
     }
 
+    private void ShowCreateModal()
+    {
+        _createModal?.ShowModal();
+    }
+
     private void ShowDeleteModal(Band band)
     {
         _deleteModal?.ShowModal(band);
+    }
+
+    private void ShowUpdateModal(Band band)
+    {
+        _updateModal?.ShowModal(band);
     }
 
     private async Task ReloadBands()

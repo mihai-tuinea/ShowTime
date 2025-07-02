@@ -1,0 +1,105 @@
+﻿<Modal @bind-Visible="@modalVisible">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Create Band</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <Label>
+                    <Strong>Band Name</Strong>
+                </Label>
+                <br />
+                <InputText @bind-value=_bandToCreate.Name Placeholder="Type band name" />
+            </Field>
+            <Field>
+                <Label>
+                    <Strong>Genre</Strong>
+                </Label>
+                <br />
+                <Select TValue="Genre" @bind-SelectedValue="_bandToCreate.Genre">
+                    @foreach (Genre genre in Enum.GetValues<Genre>())
+                    {
+                        <SelectItem Value="@genre">@genre.ToString()</SelectItem>
+                    }
+                </Select>
+            </Field>
+            <Field>
+                <Label>
+                    <Strong>Festivals</Strong>
+                </Label>
+                <br />
+                @if (_festivals != null)
+                {
+                    @foreach (var festival in _festivals)
+                    {
+                        <div>
+                            <input type="checkbox"
+                                   @onchange="e => OnFestivalCheckedChanged(e, festival)"
+                                   checked="@_selectedFestivalIds.Contains(festival.Id)" />
+                            <span>@festival.Name</span>
+                        </div>
+                    }
+                }
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
+            <Button Color="Color.Primary" Clicked="@HandleCreate">Create</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    [Parameter]
+    public EventCallback OnCreated { get; set; }
+    [Inject]
+    public required IBandRepository BandRepository { get; set; }
+    [Inject]
+    public required IFestivalRepository FestivalRepository { get; set; }
+    [Inject]
+    public required NavigationManager NavigationManager { get; set; }
+
+    private bool modalVisible;
+    private Band _bandToCreate = new Band();
+    private List<Festival>? _festivals;
+    private HashSet<Guid> _selectedFestivalIds = new();
+
+    public async Task ShowModal()
+    {
+        _bandToCreate = new Band();
+        modalVisible = true;
+        _festivals = (await FestivalRepository.GetAllAsync()).ToList();
+        _selectedFestivalIds.Clear();
+    }
+
+    private void HideModal()
+    {
+        modalVisible = false;
+    }
+
+    private void OnFestivalCheckedChanged(ChangeEventArgs e, Festival festival)
+    {
+        bool isChecked = (bool)e.Value!;
+        if (isChecked)
+            _selectedFestivalIds.Add(festival.Id);
+        else
+            _selectedFestivalIds.Remove(festival.Id);
+    }
+
+    private async Task HandleCreate()
+    {
+        if (_bandToCreate != null && _festivals != null)
+        {
+            _bandToCreate.Festivals = _festivals
+                .Where(f => _selectedFestivalIds.Contains(f.Id))
+                .ToList();
+
+            await BandRepository.AddAsync(_bandToCreate);
+            await BandRepository.SaveChangesAsync();
+            await OnCreated.InvokeAsync();
+            NavigationManager.NavigateTo("/bands");
+        }
+        HideModal();
+    }
+}

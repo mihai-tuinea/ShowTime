@@ -11,7 +11,7 @@ namespace ShowTime.Context
         public DbSet<Band> Bands { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Festival> Festivals { get; set; }
-        public DbSet<Member> Members { get; set; }
-        public DbSet<User> Users { get; set; }
+        // public DbSet<Member> Members { get; set; }
+        // public DbSet<User> Users { get; set; }
     }
 }

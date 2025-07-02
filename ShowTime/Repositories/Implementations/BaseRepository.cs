@@ -7,7 +7,7 @@ namespace ShowTime.Repositories.Implementations
     public class BaseRepository<T> : IBaseRepository<T> where T : class
     {
         protected readonly ShowTimeContext _context;
-        private readonly DbSet<T> _dbSet;
+        protected readonly DbSet<T> _dbSet;
 
         public BaseRepository(ShowTimeContext context)
         {
@@ -29,7 +29,7 @@ namespace ShowTime.Repositories.Implementations
             return await _dbSet.ToListAsync();
         }
 
-        public async Task<T> GetByIdAsync(Guid id)
+        public virtual async Task<T> GetByIdAsync(Guid id)
         {
             return await _dbSet.FindAsync(id);
         }
