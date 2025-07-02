@@ -37,7 +37,7 @@ else
     [Inject]
     public required IBandRepository BandRepository { get; set; }
 
-    private Band currentBand;
+    private Band? currentBand;
 
     protected override async Task OnInitializedAsync()
     {

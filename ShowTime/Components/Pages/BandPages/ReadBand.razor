@@ -1,15 +1,14 @@
 ﻿@page "/bands"
-@inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
 <PageTitle>Bands</PageTitle>
 
 <h1>Bands</h1>
 
-<DeleteBandModal @ref="deleteModal" OnDeleted="ReloadBands" />
+<DeleteBandModal @ref="_deleteModal" OnDeleted="ReloadBands" />
 
 <DataGrid TItem="Band"
-          Data="@bandsList">
+          Data="@_bands">
     <DataGridColumn TItem="Band" Field="@nameof(Band.Name)" Caption="Name" />
     <DataGridColumn TItem="Band" Field="@nameof(Band.Genre)" Caption="Genre" />
 
@@ -30,9 +29,11 @@
 @code {
     [Inject]
     public required IBandRepository BandRepository { get; set; }
-    private Band Band = new Band { Name = string.Empty };
-    private List<Band>? bandsList;
-    private DeleteBandModal? deleteModal;
+    [Inject]
+    public required NavigationManager NavigationManager { get; set; }
+
+    private IEnumerable<Band>? _bands;
+    private DeleteBandModal? _deleteModal;
 
     protected override async Task OnInitializedAsync()
     {
@@ -46,12 +47,11 @@
 
     private void ShowDeleteModal(Band band)
     {
-        deleteModal?.Show(band);
+        _deleteModal?.ShowModal(band);
     }
 
     private async Task ReloadBands()
     {
-        bandsList = (await BandRepository.GetAllAsync()).ToList();
-        StateHasChanged();
+        _bands = await BandRepository.GetAllAsync();
     }
 }

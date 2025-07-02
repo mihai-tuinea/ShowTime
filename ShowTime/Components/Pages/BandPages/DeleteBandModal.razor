@@ -1,47 +1,47 @@
-@using ShowTime.Components.Pages.BandPages
-@inject IBandRepository BandRepository
-
-<Blazorise.Modal @bind-Visible="IsVisible">
+<Modal @bind-Visible="@modalVisible">
     <ModalContent Centered>
         <ModalHeader>
-            <h4>Delete Band</h4>
+            <ModalTitle>Delete Band</ModalTitle>
+            <CloseButton />
         </ModalHeader>
         <ModalBody>
-            <p>Are you sure you want to delete <strong>@BandToDelete?.Name</strong>?</p>
+            <p>Are you sure you want to delete <Strong>@_bandToDelete?.Name</Strong>?</p>
         </ModalBody>
         <ModalFooter>
-            <Button Color="Color.Danger" Clicked="OnDeleteConfirmed">Delete</Button>
-            <Button Color="Color.Secondary" Clicked="Hide">Cancel</Button>
+            <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
+            <Button Color="Color.Danger" Clicked="@HandleDelete">Delete</Button>
         </ModalFooter>
     </ModalContent>
-</Blazorise.Modal>
+</Modal>
 
 @code {
-    public Band? BandToDelete { get; set; }
-    [Parameter] public EventCallback OnDeleted { get; set; }
-    public bool IsVisible { get; set; }
+    [Parameter]
+    public EventCallback OnDeleted { get; set; }
+    [Inject]
+    public required IBandRepository BandRepository { get; set; }
 
-    public void Show(Band band)
+    private bool modalVisible;
+    private Band? _bandToDelete;
+
+    public void ShowModal(Band band)
     {
-        BandToDelete = band;
-        IsVisible = true;
-        StateHasChanged();
+        modalVisible = true;
+        _bandToDelete = band;
     }
 
-    public void Hide()
+    private void HideModal()
     {
-        IsVisible = false;
-        StateHasChanged();
+        modalVisible = false;
     }
 
-    private async Task OnDeleteConfirmed()
+    private async Task HandleDelete()
     {
-        if (BandToDelete is not null)
+        if (_bandToDelete != null)
         {
-            BandRepository.Delete(BandToDelete);
+            BandRepository.Delete(_bandToDelete);
             await BandRepository.SaveChangesAsync();
             await OnDeleted.InvokeAsync();
         }
-        Hide();
+        HideModal();
     }
 }
