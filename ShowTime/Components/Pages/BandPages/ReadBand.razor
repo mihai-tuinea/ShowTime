@@ -6,10 +6,23 @@
 
 <h1>Bands</h1>
 
+<DeleteBandModal @ref="deleteModal" OnDeleted="ReloadBands" />
+
 <DataGrid TItem="Band"
           Data="@bandsList">
-    <DataGridColumn TItem="Band" Field="@nameof(Band.Name)" Caption="Name"/>
-    <DataGridColumn TItem="Band" Field="@nameof(Band.Genre)" Caption="Genre"/>
+    <DataGridColumn TItem="Band" Field="@nameof(Band.Name)" Caption="Name" />
+    <DataGridColumn TItem="Band" Field="@nameof(Band.Genre)" Caption="Genre" />
+
+    <DataGridColumn TItem="Band" Caption="Actions">
+        <DisplayTemplate>
+            <Button Color="Color.Primary" Size="Size.Small" Clicked="e => UpdateSelectedBand(context)">
+                <Blazorise.Icon Name="IconName.Edit" />
+            </Button>
+            <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(context)">
+                <Blazorise.Icon Name="IconName.Delete" />
+            </Button>
+        </DisplayTemplate>
+    </DataGridColumn>
 </DataGrid>
 
 <Button Color="Color.Primary" Clicked="@(e => NavigationManager.NavigateTo("/bands/create"))">Create</Button>
@@ -17,9 +30,28 @@
 @code {
     [Inject]
     public required IBandRepository BandRepository { get; set; }
+    private Band Band = new Band { Name = string.Empty };
     private List<Band>? bandsList;
+    private DeleteBandModal? deleteModal;
+
     protected override async Task OnInitializedAsync()
     {
+        await ReloadBands();
+    }
+
+    private void UpdateSelectedBand(Band band)
+    {
+        NavigationManager.NavigateTo($"/bands/update/{band.Id}");
+    }
+
+    private void ShowDeleteModal(Band band)
+    {
+        deleteModal?.Show(band);
+    }
+
+    private async Task ReloadBands()
+    {
         bandsList = (await BandRepository.GetAllAsync()).ToList();
+        StateHasChanged();
     }
 }

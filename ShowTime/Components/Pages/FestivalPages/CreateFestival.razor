@@ -5,14 +5,18 @@
 <h3>Create Festival</h3>
 
 <Fields>
-    <Field>
-        <Label>Name</Label>
-        <InputText @bind-Value="Festival.Name" />
-    </Field>
-    <Field>
-        <Label>Location</Label>
-        <InputText @bind-Value="Festival.Location" />
-    </Field>
+    <div>
+        <Field>
+            <Label>Name</Label>
+            <InputText @bind-Value="Festival.Name" />
+        </Field>
+    </div>
+    <div>
+        <Field>
+            <Label>Location</Label>
+            <InputText @bind-Value="Festival.Location" />
+        </Field>
+    </div>
     <Field>
         <Label>Start Date</Label>
         <DateEdit @bind-Date="Festival.StartDate"

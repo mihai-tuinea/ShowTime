@@ -1,0 +1,47 @@
+@using ShowTime.Components.Pages.BandPages
+@inject IBandRepository BandRepository
+
+<Blazorise.Modal @bind-Visible="IsVisible">
+    <ModalContent Centered>
+        <ModalHeader>
+            <h4>Delete Band</h4>
+        </ModalHeader>
+        <ModalBody>
+            <p>Are you sure you want to delete <strong>@BandToDelete?.Name</strong>?</p>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Danger" Clicked="OnDeleteConfirmed">Delete</Button>
+            <Button Color="Color.Secondary" Clicked="Hide">Cancel</Button>
+        </ModalFooter>
+    </ModalContent>
+</Blazorise.Modal>
+
+@code {
+    public Band? BandToDelete { get; set; }
+    [Parameter] public EventCallback OnDeleted { get; set; }
+    public bool IsVisible { get; set; }
+
+    public void Show(Band band)
+    {
+        BandToDelete = band;
+        IsVisible = true;
+        StateHasChanged();
+    }
+
+    public void Hide()
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task OnDeleteConfirmed()
+    {
+        if (BandToDelete is not null)
+        {
+            BandRepository.Delete(BandToDelete);
+            await BandRepository.SaveChangesAsync();
+            await OnDeleted.InvokeAsync();
+        }
+        Hide();
+    }
+}
