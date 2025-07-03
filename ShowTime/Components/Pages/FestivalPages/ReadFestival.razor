@@ -1,14 +1,17 @@
 ﻿@page "/festivals"
-@inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
 <PageTitle>Festivals</PageTitle>
 
 <h1>Festivals</h1>
 
+<CreateFestivalModal @ref="_createModal" OnCreated="ReloadFestivals" />
+<DeleteFestivalModal @ref="_deleteModal" OnDeleted="ReloadFestivals" />
+<UpdateFestivalModal @ref="_updateModal" OnUpdated="ReloadFestivals" />
+
 <DataGrid TItem="Festival"
-          Data="@FestivalsList">
-    <DataGridColumn TItem="Festival" Field="@nameof(Festival.Name)" Caption="Festival Name" />
+          Data="@_festivals">
+    <DataGridColumn TItem="Festival" Field="@nameof(Festival.Name)" Caption="Name" />
     <DataGridColumn TItem="Festival" Field="@nameof(Festival.Location)" Caption="Location" />
     <DataGridColumn TItem="Festival" Field="@nameof(Festival.StartDate)" Caption="Start Date">
         <DisplayTemplate>
@@ -22,16 +25,69 @@
         </DisplayTemplate>
     </DataGridColumn>
 
+    <DataGridColumn TItem="Festival" Caption="Actions">
+        <DisplayTemplate>
+            <Button Color="Color.Primary" Size="Size.Small" Clicked="e => ShowUpdateModal(context)">
+                <Blazorise.Icon Name="IconName.Edit" />
+            </Button>
+            <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(context)">
+                <Blazorise.Icon Name="IconName.Delete" />
+            </Button>
+        </DisplayTemplate>
+    </DataGridColumn>
 </DataGrid>
 
-<Button Color="Color.Primary" Clicked="@(e => NavigationManager.NavigateTo("/festivals/create"))">Create</Button>
+<Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
 
 @code {
     [Inject]
     public required IFestivalRepository FestivalRepository { get; set; }
-    private List<Festival>? FestivalsList;
+
+    private List<Festival> _festivals = new();
+    private CreateFestivalModal? _createModal;
+    private DeleteFestivalModal? _deleteModal;
+    private UpdateFestivalModal? _updateModal;
+
     protected override async Task OnInitializedAsync()
     {
-        FestivalsList = (await FestivalRepository.GetAllAsync()).ToList();
+        _festivals = (await FestivalRepository.GetAllAsync()).ToList();
+    }
+
+    private async Task ShowCreateModal()
+    {
+        if (_createModal != null)
+        {
+            await _createModal.ShowModal();
+        }
+    }
+
+    private void ShowDeleteModal(Festival festival)
+    {
+        _deleteModal?.ShowModal(festival);
+    }
+
+    private void ShowUpdateModal(Festival festival)
+    {
+        _updateModal?.ShowModal(festival);
+    }
+
+    private void HandleOnCreated(Festival createdFestival)
+    {
+        _festivals = _festivals.Append(createdFestival).ToList();
+    }
+
+    private void HandleOnDeleted(Festival deletedFestival)
+    {
+        _festivals = _festivals.Where(f => f.Id != deletedFestival.Id).ToList();
+    }
+
+    private void HandleOnUpdated(Festival updatedBand)
+    {
+        _festivals = _festivals.Select(b => b.Id == updatedBand.Id ? updatedBand : b).ToList();
+    }
+
+    private async Task ReloadFestivals()
+    {
+        _festivals = (await FestivalRepository.GetAllAsync()).ToList();
     }
 }

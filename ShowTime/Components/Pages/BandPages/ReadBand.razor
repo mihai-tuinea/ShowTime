@@ -31,27 +31,24 @@
 @code {
     [Inject]
     public required IBandRepository BandRepository { get; set; }
-    [Inject]
-    public required NavigationManager NavigationManager { get; set; }
 
-    private IEnumerable<Band>? _bands;
+    private List<Band> _bands = new();
     private CreateBandModal? _createModal;
     private DeleteBandModal? _deleteModal;
     private UpdateBandModal? _updateModal;
 
     protected override async Task OnInitializedAsync()
     {
-        await ReloadBands();
+        _bands = (await BandRepository.GetAllAsync()).ToList();
     }
 
-    private void UpdateSelectedBand(Band band)
+    private async Task ShowCreateModal()
     {
-        NavigationManager.NavigateTo($"/bands/update/{band.Id}");
-    }
-
-    private void ShowCreateModal()
-    {
-        _createModal?.ShowModal();
+        // this needs to be async bcs a band object isnt passed
+        if (_createModal != null)
+        {
+            await _createModal.ShowModal();
+        }
     }
 
     private void ShowDeleteModal(Band band)
@@ -64,8 +61,25 @@
         _updateModal?.ShowModal(band);
     }
 
+    private void HandleOnCreated(Band createdBand)
+    {
+        // creating a new _bands reference to force DataGrid to update
+        // StateHasChanged() doesn't achieve this effect..
+        _bands = _bands.Append(createdBand).ToList();
+    }
+
+    private void HandleOnDeleted(Band deletedBand)
+    {
+        _bands = _bands.Where(b => b.Id != deletedBand.Id).ToList();
+    }
+
+    private void HandleOnUpdated(Band updatedBand)
+    {
+        _bands = _bands.Select(b => b.Id == updatedBand.Id ? updatedBand : b).ToList();
+    }
+
     private async Task ReloadBands()
     {
-        _bands = await BandRepository.GetAllAsync();
+        _bands = (await BandRepository.GetAllAsync()).ToList();
     }
 }

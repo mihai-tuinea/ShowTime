@@ -1,0 +1,142 @@
+﻿<Modal @bind-Visible="@modalVisible">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Update Festival</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <EditForm Model="_updatedFestival" OnValidSubmit="HandleCreate">
+                <DataAnnotationsValidator />
+                <Field>
+                    <Label>
+                        <Strong>Festival Name</Strong>
+                    </Label>
+                    <br />
+                    <InputText @bind-value=_updatedFestival.Name Placeholder="Type festival name" />
+                    <ValidationMessage For="@(() => _updatedFestival.Name)" />
+                </Field>
+                <Label>
+                    <Strong>Festival Location</Strong>
+                </Label>
+                <br />
+                <InputText @bind-value=_updatedFestival.Location Placeholder="Type festival location" />
+                <ValidationMessage For="@(() => _updatedFestival.Location)" />
+                <Field>
+                </Field>
+                <Field>
+                    <Label>Start Date</Label>
+                    <DateEdit @bind-Date="_updatedFestival.StartDate"
+                              Min="@DateTime.Today" />
+                </Field>
+                <Field>
+                    <Label>End Date</Label>
+                    <DateEdit @bind-Date="_updatedFestival.EndDate"
+                              Max="@DateTime.Today.AddYears(2)" />
+                </Field>
+                <Field>
+                    <Label>
+                        <Strong>Bands</Strong>
+                    </Label>
+                    <br />
+                    @if (_bands != null)
+                    {
+                        @foreach (var band in _bands)
+                        {
+                            <Check TValue="bool"
+                                   Checked="_selectedBandsIds.Contains(band.Id)"
+                                   CheckedChanged="checkedValue => OnFestivalCheckedChanged(checkedValue, band)">
+                                @band.Name
+                            </Check>
+                        }
+                    }
+                </Field>
+
+                <ModalFooter>
+                    <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit">Save Changes</Button>
+                </ModalFooter>
+            </EditForm>
+        </ModalBody>
+    </ModalContent>
+</Modal>
+
+@code {
+    [Parameter]
+    public EventCallback<Festival> OnUpdated { get; set; }
+
+    [Inject]
+    public required IBandRepository BandRepository { get; set; }
+    [Inject]
+    public required IFestivalRepository FestivalRepository { get; set; }
+
+    private bool modalVisible;
+    private Festival _originalFestival = new Festival();
+    private Festival _updatedFestival = new Festival();
+    private List<Band>? _bands;
+    private HashSet<Guid> _selectedBandsIds = new();
+
+    public async Task ShowModal(Festival festival)
+    {
+        _originalFestival = await FestivalRepository.GetByIdAsync(festival.Id);
+        _selectedBandsIds = _originalFestival.Bands != null
+        ? _originalFestival.Bands.Select(b => b.Id).ToHashSet()
+        : new HashSet<Guid>();
+
+        _updatedFestival = new Festival
+        {
+            Name = _originalFestival.Name,
+            Location = _originalFestival.Location,
+            StartDate = _originalFestival.StartDate,
+            EndDate = _originalFestival.EndDate
+        };
+
+        _bands = (await BandRepository.GetAllAsync()).ToList();
+        modalVisible = true;
+        StateHasChanged();
+    }
+
+    private void HideModal()
+    {
+        modalVisible = false;
+    }
+
+    private void OnFestivalCheckedChanged(bool checkedValue, Band band)
+    {
+        if (checkedValue)
+            _selectedBandsIds.Add(band.Id);
+        else
+            _selectedBandsIds.Remove(band.Id);
+    }
+
+    private async Task HandleCreate()
+    {
+        if (_updatedFestival != null && _bands != null)
+        {
+            _originalFestival.Name = _updatedFestival.Name;
+            _originalFestival.Location = _updatedFestival.Location;
+            _originalFestival.StartDate = _updatedFestival.StartDate;
+            _originalFestival.EndDate = _updatedFestival.EndDate;
+
+            var selectedBands = _bands
+                .Where(b => _selectedBandsIds.Contains(b.Id))
+                .ToList();
+
+            _originalFestival.Bands = _originalFestival.Bands
+                .Where(b => selectedBands.Any(sb => sb.Id == b.Id))
+                .ToList();
+
+            foreach (var band in selectedBands)
+            {
+                if (!_originalFestival.Bands.Any(b => b.Id == band.Id))
+                {
+                    _originalFestival.Bands.Add(band);
+                }
+            }
+
+            FestivalRepository.Update(_originalFestival);
+            await FestivalRepository.SaveChangesAsync();
+            await OnUpdated.InvokeAsync(_originalFestival);
+        }
+        HideModal();
+    }
+}

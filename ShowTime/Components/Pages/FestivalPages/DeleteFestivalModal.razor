@@ -1,0 +1,47 @@
+﻿<Modal @bind-Visible="@modalVisible">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Delete Festival</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <p>Are you sure you want to delete <Strong>@_festivalToDelete?.Name</Strong>?</p>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
+            <Button Color="Color.Danger" Clicked="@HandleDelete">Delete</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    [Parameter]
+    public EventCallback<Festival> OnDeleted { get; set; }
+    [Inject]
+    public required IFestivalRepository FestivalRepository { get; set; }
+
+    private bool modalVisible;
+    private Festival? _festivalToDelete;
+
+    public void ShowModal(Festival festival)
+    {
+        modalVisible = true;
+        _festivalToDelete = festival;
+    }
+
+    private void HideModal()
+    {
+        modalVisible = false;
+    }
+
+    private async Task HandleDelete()
+    {
+        if (_festivalToDelete != null)
+        {
+            FestivalRepository.Delete(_festivalToDelete);
+            await FestivalRepository.SaveChangesAsync();
+            await OnDeleted.InvokeAsync(_festivalToDelete);
+        }
+        HideModal();
+    }
+}

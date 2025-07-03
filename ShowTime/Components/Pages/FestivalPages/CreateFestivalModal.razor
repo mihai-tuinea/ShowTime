@@ -1,0 +1,116 @@
+﻿<Modal @bind-Visible="@modalVisible">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Create Festival</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <EditForm Model="_festivalToCreate" OnValidSubmit="HandleCreate">
+                <DataAnnotationsValidator />
+                <Field>
+                    <Label>
+                        <Strong>Festival Name</Strong>
+                    </Label>
+                    <br />
+                    <InputText @bind-value=_festivalToCreate.Name Placeholder="Type festival name" />
+                    <ValidationMessage For="@(() => _festivalToCreate.Name)" />
+                </Field>
+                <Label>
+                    <Strong>Festival Location</Strong>
+                </Label>
+                <br />
+                <InputText @bind-value=_festivalToCreate.Location Placeholder="Type festival location" />
+                <ValidationMessage For="@(() => _festivalToCreate.Location)" />
+                <Field>
+                </Field>
+                <Field>
+                    <Label>Start Date</Label>
+                    <DateEdit @bind-Date="_festivalToCreate.StartDate"
+                              Min="@DateTime.Today" />
+                </Field>
+                <Field>
+                    <Label>End Date</Label>
+                    <DateEdit @bind-Date="_festivalToCreate.EndDate"
+                              Max="@DateTime.Today.AddYears(2)" />
+                </Field>
+                <Field>
+                    <Label>
+                        <Strong>Bands</Strong>
+                    </Label>
+                    <br />
+                    @if (_bands != null)
+                    {
+                        @foreach (var band in _bands)
+                        {
+                            <Check TValue="bool"
+                                   Checked="_selectedBandsIds.Contains(band.Id)"
+                                   CheckedChanged="checkedValue => OnFestivalCheckedChanged(checkedValue, band)">
+                                @band.Name
+                            </Check>
+                        }
+                    }
+                </Field>
+
+                <ModalFooter>
+                    <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit">Create</Button>
+                </ModalFooter>
+            </EditForm>
+        </ModalBody>
+    </ModalContent>
+</Modal>
+
+@code {
+    [Parameter]
+    public EventCallback<Festival> OnCreated { get; set; }
+
+    [Inject]
+    public required IBandRepository BandRepository { get; set; }
+    [Inject]
+    public required IFestivalRepository FestivalRepository { get; set; }
+
+    private bool modalVisible;
+    private Festival _festivalToCreate = new Festival();
+    private List<Band>? _bands;
+    private HashSet<Guid> _selectedBandsIds = new();
+
+    public async Task ShowModal()
+    {
+        _festivalToCreate = new Festival
+        {
+            StartDate = DateTime.Today,
+            EndDate = DateTime.Today
+        };
+        modalVisible = true;
+        _bands = (await BandRepository.GetAllAsync()).ToList();
+        _selectedBandsIds.Clear();
+    }
+
+    private void HideModal()
+    {
+        modalVisible = false;
+    }
+
+    private void OnFestivalCheckedChanged(bool checkedValue, Band band)
+    {
+        if (checkedValue)
+            _selectedBandsIds.Add(band.Id);
+        else
+            _selectedBandsIds.Remove(band.Id);
+    }
+
+    private async Task HandleCreate()
+    {
+        if (_festivalToCreate != null && _bands != null)
+        {
+            _festivalToCreate.Bands = _bands
+                .Where(f => _selectedBandsIds.Contains(f.Id))
+                .ToList();
+
+            await FestivalRepository.AddAsync(_festivalToCreate);
+            await FestivalRepository.SaveChangesAsync();
+            await OnCreated.InvokeAsync(_festivalToCreate);
+        }
+        HideModal();
+    }
+}

@@ -16,7 +16,7 @@
 
 @code {
     [Parameter]
-    public EventCallback OnDeleted { get; set; }
+    public EventCallback<Band> OnDeleted { get; set; }
     [Inject]
     public required IBandRepository BandRepository { get; set; }
 
@@ -40,7 +40,7 @@
         {
             BandRepository.Delete(_bandToDelete);
             await BandRepository.SaveChangesAsync();
-            await OnDeleted.InvokeAsync();
+            await OnDeleted.InvokeAsync(_bandToDelete);
         }
         HideModal();
     }

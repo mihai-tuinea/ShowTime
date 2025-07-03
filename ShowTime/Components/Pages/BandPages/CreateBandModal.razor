@@ -5,60 +5,63 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            <Field>
-                <Label>
-                    <Strong>Band Name</Strong>
-                </Label>
-                <br />
-                <InputText @bind-value=_bandToCreate.Name Placeholder="Type band name" />
-            </Field>
-            <Field>
-                <Label>
-                    <Strong>Genre</Strong>
-                </Label>
-                <br />
-                <Select TValue="Genre" @bind-SelectedValue="_bandToCreate.Genre">
-                    @foreach (Genre genre in Enum.GetValues<Genre>())
+            <EditForm Model="_bandToCreate" OnValidSubmit="HandleCreate">
+                <DataAnnotationsValidator />
+                <Field>
+                    <Label>
+                        <Strong>Band Name</Strong>
+                    </Label>
+                    <br />
+                    <InputText @bind-value=_bandToCreate.Name Placeholder="Type band name" />
+                    <ValidationMessage For="@(() => _bandToCreate.Name)" />
+                </Field>
+                <Field>
+                    <Label>
+                        <Strong>Genre</Strong>
+                    </Label>
+                    <br />
+                    <Select TValue="Genre" @bind-SelectedValue="_bandToCreate.Genre">
+                        @foreach (Genre genre in Enum.GetValues<Genre>())
+                        {
+                            <SelectItem Value="@genre">@genre.ToString()</SelectItem>
+                        }
+                    </Select>
+                </Field>
+                <Field>
+                    <Label>
+                        <Strong>Festivals</Strong>
+                    </Label>
+                    <br />
+                    @if (_festivals != null)
                     {
-                        <SelectItem Value="@genre">@genre.ToString()</SelectItem>
+                        @foreach (var festival in _festivals)
+                        {
+                            <Check TValue="bool"
+                                   Checked="_selectedFestivalIds.Contains(festival.Id)"
+                                   CheckedChanged="checkedValue => OnFestivalCheckedChanged(checkedValue, festival)">
+                                @festival.Name
+                            </Check>
+                        }
                     }
-                </Select>
-            </Field>
-            <Field>
-                <Label>
-                    <Strong>Festivals</Strong>
-                </Label>
-                <br />
-                @if (_festivals != null)
-                {
-                    @foreach (var festival in _festivals)
-                    {
-                        <div>
-                            <input type="checkbox"
-                                   @onchange="e => OnFestivalCheckedChanged(e, festival)"
-                                   checked="@_selectedFestivalIds.Contains(festival.Id)" />
-                            <span>@festival.Name</span>
-                        </div>
-                    }
-                }
-            </Field>
+                </Field>
+
+                <ModalFooter>
+                    <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit">Create</Button>
+                </ModalFooter>
+            </EditForm>
         </ModalBody>
-        <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
-            <Button Color="Color.Primary" Clicked="@HandleCreate">Create</Button>
-        </ModalFooter>
     </ModalContent>
 </Modal>
 
 @code {
     [Parameter]
-    public EventCallback OnCreated { get; set; }
+    public EventCallback<Band> OnCreated { get; set; }
+
     [Inject]
     public required IBandRepository BandRepository { get; set; }
     [Inject]
     public required IFestivalRepository FestivalRepository { get; set; }
-    [Inject]
-    public required NavigationManager NavigationManager { get; set; }
 
     private bool modalVisible;
     private Band _bandToCreate = new Band();
@@ -78,10 +81,9 @@
         modalVisible = false;
     }
 
-    private void OnFestivalCheckedChanged(ChangeEventArgs e, Festival festival)
+    private void OnFestivalCheckedChanged(bool checkedValue, Festival festival)
     {
-        bool isChecked = (bool)e.Value!;
-        if (isChecked)
+        if (checkedValue)
             _selectedFestivalIds.Add(festival.Id);
         else
             _selectedFestivalIds.Remove(festival.Id);
@@ -97,8 +99,7 @@
 
             await BandRepository.AddAsync(_bandToCreate);
             await BandRepository.SaveChangesAsync();
-            await OnCreated.InvokeAsync();
-            NavigationManager.NavigateTo("/bands");
+            await OnCreated.InvokeAsync(_bandToCreate);
         }
         HideModal();
     }

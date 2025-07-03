@@ -5,76 +5,82 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            <Field>
-                <Label>
-                    <Strong>Band Name</Strong>
-                </Label>
-                <br />
-                <InputText @bind-value=_bandToUpdate.Name Placeholder="Type band name" />
-            </Field>
-            <Field>
-                <Label>
-                    <Strong>Genre</Strong>
-                </Label>
-                <br />
-                <Select TValue="Genre" @bind-SelectedValue="_bandToUpdate.Genre">
-                    @foreach (Genre genre in Enum.GetValues<Genre>())
+            <EditForm Model="_updatedBand" OnValidSubmit="HandleUpdate">
+                <DataAnnotationsValidator />
+                <Field>
+                    <Label>
+                        <Strong>Band Name</Strong>
+                    </Label>
+                    <br />
+                    <InputText @bind-value=_updatedBand.Name Placeholder="Type band name" />
+                    <ValidationMessage For="@(() => _updatedBand.Name)" />
+                </Field>
+                <Field>
+                    <Label>
+                        <Strong>Genre</Strong>
+                    </Label>
+                    <br />
+                    <Select TValue="Genre" @bind-SelectedValue="_updatedBand.Genre">
+                        @foreach (Genre genre in Enum.GetValues<Genre>())
+                        {
+                            <SelectItem Value="@genre">@genre.ToString()</SelectItem>
+                        }
+                    </Select>
+                </Field>
+                <Field>
+                    <Label>
+                        <Strong>Festivals</Strong>
+                    </Label>
+                    <br />
+                    @if (_festivals != null)
                     {
-                        <SelectItem Value="@genre">@genre.ToString()</SelectItem>
+                        @foreach (var festival in _festivals)
+                        {
+                            <Check TValue="bool"
+                                   Checked="_selectedFestivalIds.Contains(festival.Id)"
+                                   CheckedChanged="checkedValue => OnFestivalCheckedChanged(checkedValue, festival)">
+                                @festival.Name
+                            </Check>
+                        }
                     }
-                </Select>
-            </Field>
-            <Field>
-                <Label>
-                    <Strong>Festivals</Strong>
-                </Label>
-                <br />
-                @if (_festivals != null)
-                {
-                    @foreach (var festival in _festivals)
-                    {
-                        <div>
-                            <input type="checkbox"
-                                   @onchange="e => OnFestivalCheckedChanged(e, festival)"
-                                   checked="@_selectedFestivalIds.Contains(festival.Id)" />
-                            <span>@festival.Name</span>
-                        </div>
-                    }
-                }
-            </Field>
+                </Field>
+
+                <ModalFooter>
+                    <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit">Save Changes</Button>
+                </ModalFooter>
+            </EditForm>
         </ModalBody>
-        <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
-            <Button Color="Color.Primary" Clicked="@HandleCreate">Save Changes</Button>
-        </ModalFooter>
     </ModalContent>
 </Modal>
 
 @code {
     [Parameter]
-    public EventCallback OnUpdated { get; set; }
+    public EventCallback<Band> OnUpdated { get; set; }
+
     [Inject]
     public required IBandRepository BandRepository { get; set; }
     [Inject]
     public required IFestivalRepository FestivalRepository { get; set; }
-    [Inject]
-    public required NavigationManager NavigationManager { get; set; }
 
     private bool modalVisible;
-    private Band _bandToUpdate = new Band();
+    private Band _originalBand = new Band();
+    private Band _updatedBand = new Band();
     private List<Festival>? _festivals;
     private HashSet<Guid> _selectedFestivalIds = new();
 
     public async Task ShowModal(Band band)
     {
-        var bandFromDb = await BandRepository.GetByIdAsync(band.Id);
-        if (bandFromDb != null)
+        _originalBand = await BandRepository.GetByIdAsync(band.Id);
+        _selectedFestivalIds = _originalBand.Festivals != null
+            ? _originalBand.Festivals.Select(f => f.Id).ToHashSet()
+            : new HashSet<Guid>();
+
+        _updatedBand = new Band
         {
-            _bandToUpdate = bandFromDb;
-            _selectedFestivalIds = _bandToUpdate.Festivals != null
-                ? _bandToUpdate.Festivals.Select(f => f.Id).ToHashSet()
-                : new HashSet<Guid>();
-        }
+            Name = _originalBand.Name,
+            Genre = _originalBand.Genre
+        };
 
         _festivals = (await FestivalRepository.GetAllAsync()).ToList();
         modalVisible = true;
@@ -86,27 +92,44 @@
         modalVisible = false;
     }
 
-    private void OnFestivalCheckedChanged(ChangeEventArgs e, Festival festival)
+    private void OnFestivalCheckedChanged(bool checkedValue, Festival festival)
     {
-        bool isChecked = (bool)e.Value!;
-        if (isChecked)
+        if (checkedValue)
             _selectedFestivalIds.Add(festival.Id);
         else
             _selectedFestivalIds.Remove(festival.Id);
     }
 
-    private async Task HandleCreate()
+    private async Task HandleUpdate()
     {
-        if (_bandToUpdate != null && _festivals != null)
+        if (_updatedBand != null && _festivals != null)
         {
-            _bandToUpdate.Festivals = _festivals
+            _originalBand.Name = _updatedBand.Name;
+            _originalBand.Genre = _updatedBand.Genre;
+
+            // DONT CHANGE THESE
+            // get the selected festivals from the tracked list
+            var selectedFestivals = _festivals
                 .Where(f => _selectedFestivalIds.Contains(f.Id))
                 .ToList();
 
-            BandRepository.Update(_bandToUpdate);
+            // remove festivals that are no longer selected
+            _originalBand.Festivals = _originalBand.Festivals
+                .Where(f => selectedFestivals.Any(sf => sf.Id == f.Id))
+                .ToList();
+
+            // add newly selected festivals that are not already in the collection
+            foreach (var festival in selectedFestivals)
+            {
+                if (!_originalBand.Festivals.Any(f => f.Id == festival.Id))
+                {
+                    _originalBand.Festivals.Add(festival);
+                }
+            }
+
+            BandRepository.Update(_originalBand);
             await BandRepository.SaveChangesAsync();
-            await OnUpdated.InvokeAsync();
-            NavigationManager.NavigateTo("/bands");
+            await OnUpdated.InvokeAsync(_originalBand);
         }
         HideModal();
     }
