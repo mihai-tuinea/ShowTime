@@ -61,23 +61,6 @@
         _updateModal?.ShowModal(band);
     }
 
-    private void HandleOnCreated(Band createdBand)
-    {
-        // creating a new _bands reference to force DataGrid to update
-        // StateHasChanged() doesn't achieve this effect..
-        _bands = _bands.Append(createdBand).ToList();
-    }
-
-    private void HandleOnDeleted(Band deletedBand)
-    {
-        _bands = _bands.Where(b => b.Id != deletedBand.Id).ToList();
-    }
-
-    private void HandleOnUpdated(Band updatedBand)
-    {
-        _bands = _bands.Select(b => b.Id == updatedBand.Id ? updatedBand : b).ToList();
-    }
-
     private async Task ReloadBands()
     {
         _bands = (await BandRepository.GetAllAsync()).ToList();

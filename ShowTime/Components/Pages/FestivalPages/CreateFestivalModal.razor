@@ -62,7 +62,7 @@
 
 @code {
     [Parameter]
-    public EventCallback<Festival> OnCreated { get; set; }
+    public EventCallback OnCreated { get; set; }
 
     [Inject]
     public required IBandRepository BandRepository { get; set; }
@@ -109,7 +109,7 @@
 
             await FestivalRepository.AddAsync(_festivalToCreate);
             await FestivalRepository.SaveChangesAsync();
-            await OnCreated.InvokeAsync(_festivalToCreate);
+            await OnCreated.InvokeAsync();
         }
         HideModal();
     }

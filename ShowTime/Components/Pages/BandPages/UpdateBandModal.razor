@@ -56,7 +56,7 @@
 
 @code {
     [Parameter]
-    public EventCallback<Band> OnUpdated { get; set; }
+    public EventCallback OnUpdated { get; set; }
 
     [Inject]
     public required IBandRepository BandRepository { get; set; }
@@ -129,7 +129,7 @@
 
             BandRepository.Update(_originalBand);
             await BandRepository.SaveChangesAsync();
-            await OnUpdated.InvokeAsync(_originalBand);
+            await OnUpdated.InvokeAsync();
         }
         HideModal();
     }

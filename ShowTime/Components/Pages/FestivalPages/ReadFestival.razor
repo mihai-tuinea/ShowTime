@@ -71,21 +71,6 @@
         _updateModal?.ShowModal(festival);
     }
 
-    private void HandleOnCreated(Festival createdFestival)
-    {
-        _festivals = _festivals.Append(createdFestival).ToList();
-    }
-
-    private void HandleOnDeleted(Festival deletedFestival)
-    {
-        _festivals = _festivals.Where(f => f.Id != deletedFestival.Id).ToList();
-    }
-
-    private void HandleOnUpdated(Festival updatedBand)
-    {
-        _festivals = _festivals.Select(b => b.Id == updatedBand.Id ? updatedBand : b).ToList();
-    }
-
     private async Task ReloadFestivals()
     {
         _festivals = (await FestivalRepository.GetAllAsync()).ToList();

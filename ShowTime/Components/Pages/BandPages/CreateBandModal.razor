@@ -56,7 +56,7 @@
 
 @code {
     [Parameter]
-    public EventCallback<Band> OnCreated { get; set; }
+    public EventCallback OnCreated { get; set; }
 
     [Inject]
     public required IBandRepository BandRepository { get; set; }
@@ -99,7 +99,7 @@
 
             await BandRepository.AddAsync(_bandToCreate);
             await BandRepository.SaveChangesAsync();
-            await OnCreated.InvokeAsync(_bandToCreate);
+            await OnCreated.InvokeAsync();
         }
         HideModal();
     }

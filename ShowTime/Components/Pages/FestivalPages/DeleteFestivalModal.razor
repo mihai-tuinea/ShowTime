@@ -16,7 +16,7 @@
 
 @code {
     [Parameter]
-    public EventCallback<Festival> OnDeleted { get; set; }
+    public EventCallback OnDeleted { get; set; }
     [Inject]
     public required IFestivalRepository FestivalRepository { get; set; }
 
@@ -40,7 +40,7 @@
         {
             FestivalRepository.Delete(_festivalToDelete);
             await FestivalRepository.SaveChangesAsync();
-            await OnDeleted.InvokeAsync(_festivalToDelete);
+            await OnDeleted.InvokeAsync();
         }
         HideModal();
     }
