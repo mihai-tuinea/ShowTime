@@ -5,7 +5,7 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            <EditForm Model="_updatedFestival" OnValidSubmit="HandleCreate">
+            <EditForm Model="_updatedFestival" OnValidSubmit="HandleUpdate">
                 <DataAnnotationsValidator />
                 <Field>
                     <Label>
@@ -78,8 +78,8 @@
     public async Task ShowModal(Festival festival)
     {
         _originalFestival = await FestivalRepository.GetByIdAsync(festival.Id);
-        _selectedBandsIds = _originalFestival.Bands != null
-        ? _originalFestival.Bands.Select(b => b.Id).ToHashSet()
+        _selectedBandsIds = _originalFestival.FestivalBands != null
+        ? _originalFestival.FestivalBands.Select(fb => fb.BandId).ToHashSet()
         : new HashSet<Guid>();
 
         _updatedFestival = new Festival
@@ -108,7 +108,7 @@
             _selectedBandsIds.Remove(band.Id);
     }
 
-    private async Task HandleCreate()
+    private async Task HandleUpdate()
     {
         if (_updatedFestival != null && _bands != null)
         {
@@ -117,19 +117,22 @@
             _originalFestival.StartDate = _updatedFestival.StartDate;
             _originalFestival.EndDate = _updatedFestival.EndDate;
 
-            var selectedBands = _bands
-                .Where(b => _selectedBandsIds.Contains(b.Id))
+            var selectedBands = _selectedBandsIds.ToHashSet();
+
+            _originalFestival.FestivalBands = _originalFestival.FestivalBands
+                .Where(fb => selectedBands.Contains(fb.BandId))
                 .ToList();
 
-            _originalFestival.Bands = _originalFestival.Bands
-                .Where(b => selectedBands.Any(sb => sb.Id == b.Id))
-                .ToList();
-
-            foreach (var band in selectedBands)
+            foreach (var bandId in selectedBands)
             {
-                if (!_originalFestival.Bands.Any(b => b.Id == band.Id))
+                if (!_originalFestival.FestivalBands.Any(fb => fb.BandId == bandId))
                 {
-                    _originalFestival.Bands.Add(band);
+                    _originalFestival.FestivalBands.Add(new FestivalBand
+                    {
+                        FestivalId = _originalFestival.Id,
+                        BandId = bandId,
+                        Order = 0 // to be changed
+                    });
                 }
             }
 

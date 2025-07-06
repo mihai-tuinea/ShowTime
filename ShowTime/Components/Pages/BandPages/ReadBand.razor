@@ -42,13 +42,9 @@
         _bands = (await BandRepository.GetAllAsync()).ToList();
     }
 
-    private async Task ShowCreateModal()
+    private void ShowCreateModal()
     {
-        // this needs to be async bcs a band object isnt passed
-        if (_createModal != null)
-        {
-            await _createModal.ShowModal();
-        }
+        _createModal.ShowModal();
     }
 
     private void ShowDeleteModal(Band band)

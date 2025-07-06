@@ -27,23 +27,6 @@
                         }
                     </Select>
                 </Field>
-                <Field>
-                    <Label>
-                        <Strong>Festivals</Strong>
-                    </Label>
-                    <br />
-                    @if (_festivals != null)
-                    {
-                        @foreach (var festival in _festivals)
-                        {
-                            <Check TValue="bool"
-                                   Checked="_selectedFestivalIds.Contains(festival.Id)"
-                                   CheckedChanged="checkedValue => OnFestivalCheckedChanged(checkedValue, festival)">
-                                @festival.Name
-                            </Check>
-                        }
-                    }
-                </Field>
 
                 <ModalFooter>
                     <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
@@ -60,20 +43,14 @@
 
     [Inject]
     public required IBandRepository BandRepository { get; set; }
-    [Inject]
-    public required IFestivalRepository FestivalRepository { get; set; }
 
     private bool modalVisible;
     private Band _bandToCreate = new Band();
-    private List<Festival>? _festivals;
-    private HashSet<Guid> _selectedFestivalIds = new();
 
-    public async Task ShowModal()
+    public void ShowModal()
     {
         _bandToCreate = new Band();
         modalVisible = true;
-        _festivals = (await FestivalRepository.GetAllAsync()).ToList();
-        _selectedFestivalIds.Clear();
     }
 
     private void HideModal()
@@ -81,22 +58,10 @@
         modalVisible = false;
     }
 
-    private void OnFestivalCheckedChanged(bool checkedValue, Festival festival)
-    {
-        if (checkedValue)
-            _selectedFestivalIds.Add(festival.Id);
-        else
-            _selectedFestivalIds.Remove(festival.Id);
-    }
-
     private async Task HandleCreate()
     {
-        if (_bandToCreate != null && _festivals != null)
+        if (_bandToCreate != null)
         {
-            _bandToCreate.Festivals = _festivals
-                .Where(f => _selectedFestivalIds.Contains(f.Id))
-                .ToList();
-
             await BandRepository.AddAsync(_bandToCreate);
             await BandRepository.SaveChangesAsync();
             await OnCreated.InvokeAsync();

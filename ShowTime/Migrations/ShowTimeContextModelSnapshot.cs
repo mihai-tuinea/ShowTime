@@ -22,21 +22,6 @@ namespace ShowTime.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BandFestival", b =>
-                {
-                    b.Property<Guid>("BandsId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("FestivalsId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("BandsId", "FestivalsId");
-
-                    b.HasIndex("FestivalsId");
-
-                    b.ToTable("BandFestival");
-                });
-
             modelBuilder.Entity("ShowTime.Entities.Band", b =>
                 {
                     b.Property<Guid>("Id")
@@ -47,6 +32,7 @@ namespace ShowTime.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -92,9 +78,11 @@ namespace ShowTime.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Location")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartDate")
@@ -105,19 +93,22 @@ namespace ShowTime.Migrations
                     b.ToTable("Festivals");
                 });
 
-            modelBuilder.Entity("BandFestival", b =>
+            modelBuilder.Entity("ShowTime.Entities.FestivalBand", b =>
                 {
-                    b.HasOne("ShowTime.Entities.Band", null)
-                        .WithMany()
-                        .HasForeignKey("BandsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<Guid>("FestivalId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasOne("ShowTime.Entities.Festival", null)
-                        .WithMany()
-                        .HasForeignKey("FestivalsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<Guid>("BandId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.HasKey("FestivalId", "BandId");
+
+                    b.HasIndex("BandId");
+
+                    b.ToTable("FestivalBands");
                 });
 
             modelBuilder.Entity("ShowTime.Entities.Booking", b =>
@@ -131,9 +122,35 @@ namespace ShowTime.Migrations
                     b.Navigation("Festival");
                 });
 
+            modelBuilder.Entity("ShowTime.Entities.FestivalBand", b =>
+                {
+                    b.HasOne("ShowTime.Entities.Band", "Band")
+                        .WithMany("FestivalBands")
+                        .HasForeignKey("BandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ShowTime.Entities.Festival", "Festival")
+                        .WithMany("FestivalBands")
+                        .HasForeignKey("FestivalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Band");
+
+                    b.Navigation("Festival");
+                });
+
+            modelBuilder.Entity("ShowTime.Entities.Band", b =>
+                {
+                    b.Navigation("FestivalBands");
+                });
+
             modelBuilder.Entity("ShowTime.Entities.Festival", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("FestivalBands");
                 });
 #pragma warning restore 612, 618
         }

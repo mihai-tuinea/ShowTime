@@ -27,23 +27,6 @@
                         }
                     </Select>
                 </Field>
-                <Field>
-                    <Label>
-                        <Strong>Festivals</Strong>
-                    </Label>
-                    <br />
-                    @if (_festivals != null)
-                    {
-                        @foreach (var festival in _festivals)
-                        {
-                            <Check TValue="bool"
-                                   Checked="_selectedFestivalIds.Contains(festival.Id)"
-                                   CheckedChanged="checkedValue => OnFestivalCheckedChanged(checkedValue, festival)">
-                                @festival.Name
-                            </Check>
-                        }
-                    }
-                </Field>
 
                 <ModalFooter>
                     <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
@@ -60,21 +43,14 @@
 
     [Inject]
     public required IBandRepository BandRepository { get; set; }
-    [Inject]
-    public required IFestivalRepository FestivalRepository { get; set; }
 
     private bool modalVisible;
     private Band _originalBand = new Band();
     private Band _updatedBand = new Band();
-    private List<Festival>? _festivals;
-    private HashSet<Guid> _selectedFestivalIds = new();
 
     public async Task ShowModal(Band band)
     {
         _originalBand = await BandRepository.GetByIdAsync(band.Id);
-        _selectedFestivalIds = _originalBand.Festivals != null
-            ? _originalBand.Festivals.Select(f => f.Id).ToHashSet()
-            : new HashSet<Guid>();
 
         _updatedBand = new Band
         {
@@ -82,7 +58,6 @@
             Genre = _originalBand.Genre
         };
 
-        _festivals = (await FestivalRepository.GetAllAsync()).ToList();
         modalVisible = true;
         StateHasChanged();
     }
@@ -92,40 +67,12 @@
         modalVisible = false;
     }
 
-    private void OnFestivalCheckedChanged(bool checkedValue, Festival festival)
-    {
-        if (checkedValue)
-            _selectedFestivalIds.Add(festival.Id);
-        else
-            _selectedFestivalIds.Remove(festival.Id);
-    }
-
     private async Task HandleUpdate()
     {
-        if (_updatedBand != null && _festivals != null)
+        if (_updatedBand != null)
         {
             _originalBand.Name = _updatedBand.Name;
             _originalBand.Genre = _updatedBand.Genre;
-
-            // DONT CHANGE THESE
-            // get the selected festivals from the tracked list
-            var selectedFestivals = _festivals
-                .Where(f => _selectedFestivalIds.Contains(f.Id))
-                .ToList();
-
-            // remove festivals that are no longer selected
-            _originalBand.Festivals = _originalBand.Festivals
-                .Where(f => selectedFestivals.Any(sf => sf.Id == f.Id))
-                .ToList();
-
-            // add newly selected festivals that are not already in the collection
-            foreach (var festival in selectedFestivals)
-            {
-                if (!_originalBand.Festivals.Any(f => f.Id == festival.Id))
-                {
-                    _originalBand.Festivals.Add(festival);
-                }
-            }
 
             BandRepository.Update(_originalBand);
             await BandRepository.SaveChangesAsync();

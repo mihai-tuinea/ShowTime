@@ -103,8 +103,13 @@
     {
         if (_festivalToCreate != null && _bands != null)
         {
-            _festivalToCreate.Bands = _bands
-                .Where(f => _selectedBandsIds.Contains(f.Id))
+            _festivalToCreate.FestivalBands = _selectedBandsIds
+                .Select(bandId => new FestivalBand
+                {
+                    FestivalId = _festivalToCreate.Id,
+                    BandId = bandId,
+                    Order = 0 // to be changed
+                })
                 .ToList();
 
             await FestivalRepository.AddAsync(_festivalToCreate);
