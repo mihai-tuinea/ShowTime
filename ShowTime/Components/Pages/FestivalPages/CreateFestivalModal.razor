@@ -7,6 +7,8 @@
         <ModalBody>
             <EditForm Model="_festivalToCreate" OnValidSubmit="HandleCreate">
                 <DataAnnotationsValidator />
+
+                <!-- Name -->
                 <Field>
                     <Label>
                         <Strong>Festival Name</Strong>
@@ -15,14 +17,16 @@
                     <InputText @bind-value=_festivalToCreate.Name Placeholder="Type festival name" />
                     <ValidationMessage For="@(() => _festivalToCreate.Name)" />
                 </Field>
+
+                <!-- Location -->
                 <Label>
                     <Strong>Festival Location</Strong>
                 </Label>
                 <br />
                 <InputText @bind-value=_festivalToCreate.Location Placeholder="Type festival location" />
                 <ValidationMessage For="@(() => _festivalToCreate.Location)" />
-                <Field>
-                </Field>
+                
+                <!-- Duration -->
                 <Field>
                     <Label>Start Date</Label>
                     <DateEdit @bind-Date="_festivalToCreate.StartDate"
@@ -33,6 +37,8 @@
                     <DateEdit @bind-Date="_festivalToCreate.EndDate"
                               Max="@DateTime.Today.AddYears(2)" />
                 </Field>
+
+                <!-- Bands -->
                 <Field>
                     <Label>
                         <Strong>Bands</Strong>
@@ -44,7 +50,7 @@
                         {
                             <Check TValue="bool"
                                    Checked="_selectedBandsIds.Contains(band.Id)"
-                                   CheckedChanged="checkedValue => OnFestivalCheckedChanged(checkedValue, band)">
+                                   CheckedChanged="checkedValue => OnBandCheckedChanged(checkedValue, band)">
                                 @band.Name
                             </Check>
                         }
@@ -91,7 +97,7 @@
         modalVisible = false;
     }
 
-    private void OnFestivalCheckedChanged(bool checkedValue, Band band)
+    private void OnBandCheckedChanged(bool checkedValue, Band band)
     {
         if (checkedValue)
             _selectedBandsIds.Add(band.Id);

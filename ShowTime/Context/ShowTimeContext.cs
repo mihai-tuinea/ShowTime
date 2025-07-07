@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ShowTime.Entities;
 
 namespace ShowTime.Context
 {
-    public class ShowTimeContext : DbContext
+    public class ShowTimeContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
     {
         public ShowTimeContext(DbContextOptions<ShowTimeContext> options) : base(options)
         {
@@ -27,6 +29,8 @@ namespace ShowTime.Context
                 .HasOne(fb => fb.Band)
                 .WithMany(b => b.FestivalBands)
                 .HasForeignKey(fb => fb.BandId);
+
+            base.OnModelCreating(modelBuilder);
         }
         // public DbSet<Member> Members { get; set; }
         // public DbSet<User> Users { get; set; }
