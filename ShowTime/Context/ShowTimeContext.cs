@@ -33,6 +33,5 @@ namespace ShowTime.Context
             base.OnModelCreating(modelBuilder);
         }
         // public DbSet<Member> Members { get; set; }
-        // public DbSet<User> Users { get; set; }
     }
 }

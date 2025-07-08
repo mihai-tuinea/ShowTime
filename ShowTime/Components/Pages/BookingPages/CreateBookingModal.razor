@@ -1,0 +1,100 @@
+﻿<Modal @bind-Visible="@modalVisible">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Create Booking</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <EditForm Model="_bookingToCreate" OnValidSubmit="HandleCreate">
+                <DataAnnotationsValidator />
+
+                <Field>
+                    <Label>
+                        <Strong>Festival</Strong>
+                    </Label>
+                    <Select TValue="Guid" @bind-SelectedValue="_bookingToCreate.ApplicationUserId">
+                        @if (_festivals != null)
+                        {
+                            @foreach (Festival f in _festivals)
+                            {
+                                <SelectItem Value="@f.Id">@f.Name</SelectItem>
+                            }
+                        }
+                    </Select>
+                </Field>
+
+                <ModalFooter>
+                    <Button Color="Color.Secondary" Clicked="@HideModal">Cancel</Button>
+                    <Button Color="Color.Primary" Type="ButtonType.Submit">Create</Button>
+                </ModalFooter>
+            </EditForm>
+        </ModalBody>
+    </ModalContent>
+</Modal>
+
+@code {
+    [Parameter]
+    public EventCallback OnCreated { get; set; }
+    [Parameter]
+    public Guid UserId { get; set; }
+
+    [Inject]
+    public required IBookingRepository BookingRepository { get; set; }
+    [Inject]
+    public required IFestivalRepository FestivalRepository { get; set; }
+
+    private bool modalVisible;
+    private Booking _bookingToCreate = new Booking();
+    private List<Festival>? _festivals;
+
+    public async Task ShowModal(Guid userId)
+    {
+        modalVisible = true;
+        UserId = userId;
+        _bookingToCreate = new Booking
+        {
+            ApplicationUserId = UserId
+        };
+        _festivals = (await FestivalRepository.GetAllAsync()).ToList();
+
+        Console.WriteLine("Festivals loaded:");
+        foreach (var festival in _festivals)
+        {
+            Console.WriteLine($"Id: {festival.Id}, Name: {festival.Name}");
+        }
+    }
+
+    private void HideModal()
+    {
+        modalVisible = false;
+    }
+
+    private async Task HandleCreate()
+    {
+        if (_bookingToCreate != null && _festivals != null)
+        {
+            Console.WriteLine($"Selected FestivalId before validation: {_bookingToCreate.FestivalId}");
+
+            // Validate the selected FestivalId
+            if (_bookingToCreate.FestivalId == default(Guid))
+            {
+                Console.WriteLine("No festival selected.");
+                return; // Prevent saving if no festival is selected
+            }
+
+            var selectedFestival = _festivals.FirstOrDefault(f => f.Id == _bookingToCreate.FestivalId);
+            if (selectedFestival == null)
+            {
+                Console.WriteLine("Invalid FestivalId selected.");
+                return; // Prevent saving if the FestivalId is invalid
+            }
+
+            // Save the booking
+            _bookingToCreate.Festival = selectedFestival; // Optional: Set the navigation property
+            await BookingRepository.AddAsync(_bookingToCreate);
+            await BookingRepository.SaveChangesAsync();
+            await OnCreated.InvokeAsync();
+        }
+        HideModal();
+    }
+}

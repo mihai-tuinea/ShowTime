@@ -1,28 +1,68 @@
 ﻿@page "/bookings"
-@inject NavigationManager NavigationManager
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Bookings</PageTitle>
 
+<CreateBookingModal @ref="_createModal" OnCreated="OnInitializedAsync" />
+
 <h1>Bookings</h1>
 
-<DataGrid TItem="Booking" Data="@BookingsList">
-    <DataGridColumn TItem="Booking" Caption="Booked Festival">
-        <DisplayTemplate>
-            @context.Festival?.Name
-        </DisplayTemplate>
-    </DataGridColumn>
-    <DataGridColumn TItem="Booking" Field="@nameof(Booking.Email)" Caption="Email" />
+<DataGrid TItem="Booking"
+          Data="@_bookings">
+    <DataGridColumn TItem="Booking" Field="@nameof(Booking.Festival.Name)" Caption="Booked Festival" />
 </DataGrid>
 
-<Button Color="Color.Primary" Clicked="@(e => NavigationManager.NavigateTo("/bookings/create"))">Create</Button>
+<Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
 
 @code {
     [Inject]
     public required IBookingRepository BookingRepository { get; set; }
-    private List<Booking>? BookingsList;
+
+    private CreateBookingModal? _createModal;
+
+
+    private List<Booking> _bookings = new();
+    private Guid? _userId;
+
     protected override async Task OnInitializedAsync()
     {
-        BookingsList = (await BookingRepository.GetAllAsync()).ToList();
+        // Get the current user's authentication state
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("sub") ?? user.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            _userId = userId; // Store the userId for reuse
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                // Check if the user has the "admin" role
+                if (user.IsInRole("admin"))
+                {
+                    // Fetch all bookings for admin
+                    _bookings = (await BookingRepository.GetAllAsync()).ToList();
+                }
+                else
+                {
+                    // Fetch bookings for the current user
+                    _bookings = (await BookingRepository.GetBookingsByUserIdAsync(userId)).ToList();
+                }
+            }
+        }
+    }
+
+    private async Task ShowCreateModal()
+    {
+        if (_createModal != null && _userId.HasValue)
+        {
+            await _createModal.ShowModal(_userId.Value); // Reuse the stored userId
+        }
     }
 }
+
+

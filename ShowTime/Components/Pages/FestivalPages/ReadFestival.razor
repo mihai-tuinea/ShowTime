@@ -9,6 +9,7 @@
 <DeleteFestivalModal @ref="_deleteModal" OnDeleted="ReloadFestivals" />
 <UpdateFestivalModal @ref="_updateModal" OnUpdated="ReloadFestivals" />
 
+@*
 <DataGrid TItem="Festival"
           Data="@_festivals">
     <DataGridColumn TItem="Festival" Field="@nameof(Festival.Name)" Caption="Name" />
@@ -36,14 +37,50 @@
         </DisplayTemplate>
     </DataGridColumn>
 </DataGrid>
+*@
 
 <Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
+<br />
+
+<TextEdit Placeholder="Search by festival name.."
+          Text="@_searchTerm"
+          TextChanged="FilterFestivals"></TextEdit>
+<br />
+
+<CardDeck>
+    @if (_festivals != null)
+    {
+        @foreach (Festival festival in _filteredFestivals)
+        {
+            <Card>
+                <CardBody>
+                    <CardTitle Size="5"><Strong>@festival.Name</Strong></CardTitle>
+                    <br />
+                    <CardSubtitle>Location: @festival.Location</CardSubtitle>
+                    <br />
+                    <CardSubtitle>@festival.StartDate.ToString("dd-MM-yyyy") to @festival.EndDate.ToString("dd-MM-yyyy")</CardSubtitle>
+                    <br />
+                    <Button Color="Color.Primary" Size="Size.Small" Clicked="e => ShowUpdateModal(festival)">
+                        <Blazorise.Icon Name="IconName.Edit" />
+                    </Button>
+                    <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(festival)">
+                        <Blazorise.Icon Name="IconName.Delete" />
+                    </Button>
+                </CardBody>
+            </Card>
+        }
+    }
+</CardDeck>
+
+
 
 @code {
     [Inject]
     public required IFestivalRepository FestivalRepository { get; set; }
 
     private List<Festival> _festivals = new();
+    private List<Festival> _filteredFestivals = new();
+    private string _searchTerm = string.Empty;
     private CreateFestivalModal? _createModal;
     private DeleteFestivalModal? _deleteModal;
     private UpdateFestivalModal? _updateModal;
@@ -51,6 +88,7 @@
     protected override async Task OnInitializedAsync()
     {
         _festivals = (await FestivalRepository.GetAllAsync()).ToList();
+        _filteredFestivals = _festivals;
     }
 
     private async Task ShowCreateModal()
@@ -74,5 +112,22 @@
     private async Task ReloadFestivals()
     {
         _festivals = (await FestivalRepository.GetAllAsync()).ToList();
+        _filteredFestivals = _festivals;
+        _searchTerm = string.Empty;
+    }
+
+    private void FilterFestivals(string value)
+    {
+        _searchTerm = value;
+        if (string.IsNullOrEmpty(_searchTerm))
+        {
+            _filteredFestivals = _festivals;
+        }
+        else
+        {
+            _filteredFestivals = _festivals
+            .Where(f => f.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        }
     }
 }
