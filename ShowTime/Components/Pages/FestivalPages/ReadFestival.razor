@@ -3,26 +3,26 @@
 
 <PageTitle>Festivals</PageTitle>
 
-@if(_festivals == null)
+@if (_festivals == null)
 {
 }
-else 
+else
 {
-<div>
-    <h1>Festivals</h1>
-    <AuthorizeView Roles="admin">
-        <Authorized>
-            <Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
-            <br />
-        </Authorized>
-    </AuthorizeView>
-</div>
+    <div>
+        <h1>Festivals</h1>
+        <AuthorizeView Roles="admin">
+            <Authorized>
+                <Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
+                <br />
+            </Authorized>
+        </AuthorizeView>
+    </div>
 
-<CreateFestivalModal @ref="_createModal" OnCreated="ReloadFestivals" />
-<DeleteFestivalModal @ref="_deleteModal" OnDeleted="ReloadFestivals" />
-<UpdateFestivalModal @ref="_updateModal" OnUpdated="ReloadFestivals" />
+    <CreateFestivalModal @ref="_createModal" OnCreated="ReloadFestivals" />
+    <DeleteFestivalModal @ref="_deleteModal" OnDeleted="ReloadFestivals" />
+    <UpdateFestivalModal @ref="_updateModal" OnUpdated="ReloadFestivals" />
 
-@*
+    @*
 <DataGrid TItem="Festival"
           Data="@_festivals">
     <DataGridColumn TItem="Festival" Field="@nameof(Festival.Name)" Caption="Name" />
@@ -52,35 +52,35 @@ else
 </DataGrid>
 *@
 
-<TextEdit Placeholder="Search by festival name.."
-          Text="@_searchTerm"
-          TextChanged="FilterFestivals"></TextEdit>
-<br />
+    <TextEdit Placeholder="Search by festival name.."
+              Text="@_searchTerm"
+              TextChanged="FilterFestivals"></TextEdit>
+    <br />
 
-<CardDeck>
-    @if (_festivals != null)
-    {
-        @foreach (Festival festival in _filteredFestivals)
+    <CardDeck>
+        @if (_festivals != null)
         {
-            <Card>
-                <CardBody>
-                    <CardTitle Size="5"><Strong>@festival.Name</Strong></CardTitle>
-                    <br />
-                    <CardSubtitle>Location: @festival.Location</CardSubtitle>
-                    <br />
-                    <CardSubtitle>@festival.StartDate.ToString("dd-MM-yyyy") to @festival.EndDate.ToString("dd-MM-yyyy")</CardSubtitle>
-                    <br />
-                    <Button Color="Color.Primary" Size="Size.Small" Clicked="e => ShowUpdateModal(festival)">
-                        <Blazorise.Icon Name="IconName.Edit" />
-                    </Button>
-                    <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(festival)">
-                        <Blazorise.Icon Name="IconName.Delete" />
-                    </Button>
-                </CardBody>
-            </Card>
+            @foreach (Festival festival in _filteredFestivals)
+            {
+                <Card>
+                    <CardBody>
+                        <CardTitle Size="5"><Strong>@festival.Name</Strong></CardTitle>
+                        <br />
+                        <CardSubtitle>Location: @festival.Location</CardSubtitle>
+                        <br />
+                        <CardSubtitle>@festival.StartDate.ToString("dd-MM-yyyy") to @festival.EndDate.ToString("dd-MM-yyyy")</CardSubtitle>
+                        <br />
+                        <Button Color="Color.Primary" Size="Size.Small" Clicked="e => ShowUpdateModal(festival)">
+                            <Blazorise.Icon Name="IconName.Edit" />
+                        </Button>
+                        <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(festival)">
+                            <Blazorise.Icon Name="IconName.Delete" />
+                        </Button>
+                    </CardBody>
+                </Card>
+            }
         }
-    }
-</CardDeck>
+    </CardDeck>
 
 }
 
@@ -89,7 +89,7 @@ else
     public required IFestivalRepository FestivalRepository { get; set; }
 
     private List<Festival>? _festivals;
-    private List<Festival> _filteredFestivals = new();
+    private List<Festival>? _filteredFestivals;
     private string _searchTerm = string.Empty;
     private CreateFestivalModal? _createModal;
     private DeleteFestivalModal? _deleteModal;
@@ -128,16 +128,19 @@ else
 
     private void FilterFestivals(string value)
     {
-        _searchTerm = value;
-        if (string.IsNullOrEmpty(_searchTerm))
+        if (_festivals != null)
         {
-            _filteredFestivals = _festivals;
-        }
-        else
-        {
-            _filteredFestivals = _festivals
-            .Where(f => f.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+            _searchTerm = value;
+            if (string.IsNullOrEmpty(_searchTerm))
+            {
+                _filteredFestivals = _festivals;
+            }
+            else
+            {
+                _filteredFestivals = _festivals
+                .Where(f => f.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            }
         }
     }
 }

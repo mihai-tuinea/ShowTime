@@ -5,8 +5,10 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            <EditForm Model="_updatedFestival" OnValidSubmit="HandleUpdate">
+            <EditForm Model="_updatedFestival" OnValidSubmit="HandleCreate">
                 <DataAnnotationsValidator />
+
+                <!-- Name -->
                 <Field>
                     <Label>
                         <Strong>Festival Name</Strong>
@@ -15,24 +17,33 @@
                     <InputText @bind-value=_updatedFestival.Name Placeholder="Type festival name" />
                     <ValidationMessage For="@(() => _updatedFestival.Name)" />
                 </Field>
+
+                <!-- Location -->
                 <Label>
                     <Strong>Festival Location</Strong>
                 </Label>
                 <br />
                 <InputText @bind-value=_updatedFestival.Location Placeholder="Type festival location" />
                 <ValidationMessage For="@(() => _updatedFestival.Location)" />
-                <Field>
-                </Field>
+
+                <!-- Duration -->
                 <Field>
                     <Label>Start Date</Label>
-                    <DateEdit @bind-Date="_updatedFestival.StartDate"
-                              Min="@DateTime.Today" />
+                    <DateEdit @bind-Date="@StartDate"
+                              Max="@EndDate"
+                              TValue="DateTime?"
+                              Placeholder="Start Date" />
                 </Field>
+
                 <Field>
                     <Label>End Date</Label>
-                    <DateEdit @bind-Date="_updatedFestival.EndDate"
-                              Max="@DateTime.Today.AddYears(2)" />
+                    <DateEdit @bind-Date="@EndDate"
+                              Min="@StartDate"
+                              TValue="DateTime?"
+                              Placeholder="End Date" />
                 </Field>
+
+                <!-- Bands -->
                 <Field>
                     <Label>
                         <Strong>Bands</Strong>
@@ -43,10 +54,28 @@
                         @foreach (var band in _bands)
                         {
                             <Check TValue="bool"
-                                   Checked="_selectedBandsIds.Contains(band.Id)"
-                                   CheckedChanged="checkedValue => OnFestivalCheckedChanged(checkedValue, band)">
+                                   Checked="@(_selectedFestivalBands.Any(fb => fb.BandId == band.Id))"
+                                   CheckedChanged="checkedValue => OnBandCheckedChanged(checkedValue, band)">
                                 @band.Name
                             </Check>
+                        }
+                    }
+                </Field>
+
+                <!-- Lineup -->
+                <Field>
+                    <Label>
+                        <Strong>Lineup</Strong>
+                    </Label>
+                    @if (_selectedFestivalBands != null)
+                    {
+                        @foreach (FestivalBand fb in _selectedFestivalBands)
+                        {
+                            <Card>
+                                <CardBody>
+                                    @fb.Order . @fb.Band?.Name
+                                </CardBody>
+                            </Card>
                         }
                     }
                 </Field>
@@ -73,24 +102,26 @@
     private Festival _originalFestival = new Festival();
     private Festival _updatedFestival = new Festival();
     private List<Band>? _bands;
-    private HashSet<Guid> _selectedBandsIds = new();
+    private List<FestivalBand> _selectedFestivalBands = new();
+
+    private DateTime? StartDate { get; set; } = DateTime.Today;
+    private DateTime? EndDate { get; set; } = DateTime.Today.AddDays(1);
 
     public async Task ShowModal(Festival festival)
     {
         _originalFestival = await FestivalRepository.GetByIdAsync(festival.Id);
-        _selectedBandsIds = _originalFestival.FestivalBands != null
-        ? _originalFestival.FestivalBands.Select(fb => fb.BandId).ToHashSet()
-        : new HashSet<Guid>();
 
         _updatedFestival = new Festival
         {
             Name = _originalFestival.Name,
             Location = _originalFestival.Location,
-            StartDate = _originalFestival.StartDate,
-            EndDate = _originalFestival.EndDate
         };
+        StartDate = _originalFestival.StartDate;
+        EndDate = _originalFestival.EndDate;
+        _selectedFestivalBands = _originalFestival.FestivalBands.ToList();
 
         _bands = (await BandRepository.GetAllAsync()).ToList();
+
         modalVisible = true;
         StateHasChanged();
     }
@@ -100,41 +131,39 @@
         modalVisible = false;
     }
 
-    private void OnFestivalCheckedChanged(bool checkedValue, Band band)
+    private void OnBandCheckedChanged(bool checkedValue, Band band)
     {
         if (checkedValue)
-            _selectedBandsIds.Add(band.Id);
+        {
+            var newFestivalBand = new FestivalBand()
+            {
+                FestivalId = _updatedFestival.Id,
+                BandId = band.Id,
+                Band = band,
+                Order = _selectedFestivalBands.Count()
+            };
+            _selectedFestivalBands.Add(newFestivalBand);
+        }
         else
-            _selectedBandsIds.Remove(band.Id);
+        {
+            _selectedFestivalBands.RemoveAll(fb => fb.BandId == band.Id);
+            int index = 0;
+            foreach (FestivalBand fb in _selectedFestivalBands)
+            {
+                fb.Order = index++;
+            }
+        }
     }
 
-    private async Task HandleUpdate()
+    private async Task HandleCreate()
     {
-        if (_updatedFestival != null && _bands != null)
+        if (_updatedFestival != null)
         {
             _originalFestival.Name = _updatedFestival.Name;
             _originalFestival.Location = _updatedFestival.Location;
-            _originalFestival.StartDate = _updatedFestival.StartDate;
-            _originalFestival.EndDate = _updatedFestival.EndDate;
-
-            var selectedBands = _selectedBandsIds.ToHashSet();
-
-            _originalFestival.FestivalBands = _originalFestival.FestivalBands
-                .Where(fb => selectedBands.Contains(fb.BandId))
-                .ToList();
-
-            foreach (var bandId in selectedBands)
-            {
-                if (!_originalFestival.FestivalBands.Any(fb => fb.BandId == bandId))
-                {
-                    _originalFestival.FestivalBands.Add(new FestivalBand
-                    {
-                        FestivalId = _originalFestival.Id,
-                        BandId = bandId,
-                        Order = 0 // to be changed
-                    });
-                }
-            }
+            _originalFestival.StartDate = StartDate ?? DateTime.MinValue;
+            _originalFestival.EndDate = EndDate ?? DateTime.MinValue;
+            _originalFestival.FestivalBands = _selectedFestivalBands;
 
             FestivalRepository.Update(_originalFestival);
             await FestivalRepository.SaveChangesAsync();

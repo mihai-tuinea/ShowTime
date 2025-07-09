@@ -1,26 +1,19 @@
 ﻿@page "/counter"
-@rendermode InteractiveServer
+@using Blazorise
 
-<PageTitle>Counter</PageTitle>
+<EditForm Model="@this">
+    <DateEdit @bind-Date="@StartDate"
+              Max="@EndDate"
+              TValue="DateTime?"
+              Placeholder="Start Date" />
 
-<h1>Counter</h1>
-
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
-
-<Button Color="Color.Primary" Clicked="@LowerCount">Don't Click me</Button>
+    <DateEdit @bind-Date="@EndDate"
+              Min="@StartDate"
+              TValue="DateTime?"
+              Placeholder="End Date" />
+</EditForm>
 
 @code {
-    private int currentCount = 0;
-
-    private void IncrementCount()
-    {
-        currentCount++;
-    }
-
-    private void LowerCount()
-    {
-        currentCount--;
-    }
+    private DateTime? StartDate { get; set; } = DateTime.Today;
+    private DateTime? EndDate { get; set; } = DateTime.Today.AddDays(1);
 }

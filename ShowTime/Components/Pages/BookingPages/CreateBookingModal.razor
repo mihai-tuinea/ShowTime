@@ -33,12 +33,28 @@
                         <Strong>Booking Options</Strong>
                     </Label>
                     <RadioGroup TValue="int"
-                                @bind-Value="_bookingOption"
                                 Disabled="@(_selectedFestival == null)"
-                                @onchange="OnBookingOptionChanged">
+                                CheckedValue="@_bookingOption"
+                                CheckedValueChanged="@OnCheckedValueChanged">
                         <Radio Value="1">Full Access</Radio>
+                        <br />
                         <Radio Value="2">Individual Day</Radio>
                     </RadioGroup>
+
+                    @code {
+
+                        Task OnCheckedValueChanged(int value)
+                        {
+                            _bookingOption = value;
+                            Console.WriteLine(_bookingOption);
+                            if (_bookingOption == 1)
+                            {
+                                _bookingToCreate.StartDate = _selectedFestival.StartDate;
+                                _bookingToCreate.EndDate = _selectedFestival.EndDate;
+                            }
+                            return Task.CompletedTask;
+                        }
+                    }
                 </Field>
 
                 <ModalFooter>
@@ -68,15 +84,6 @@
     private Festival? _selectedFestival = null;
     private int _bookingOption = 0; // 0 default 1 Full Access 2 Individual Day
 
-    private void OnBookingOptionChanged(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out var value))
-        {
-            _bookingOption = value;
-            SetBookingDatesForOption();
-        }
-    }
-
     private void OnFestivalSelected(ChangeEventArgs e)
     {
         _bookingOption = 0; // Reset booking option when festival is selected
@@ -91,15 +98,6 @@
             _bookingToCreate.FestivalId = default(Guid);
             _selectedFestival = null;
             Console.WriteLine("No valid festival selected.");
-        }
-    }
-
-    private void SetBookingDatesForOption()
-    {
-        if (_bookingOption == 1 && _selectedFestival != null)
-        {
-            _bookingToCreate.StartDate = _selectedFestival.StartDate;
-            _bookingToCreate.EndDate = _selectedFestival.EndDate;
         }
     }
 

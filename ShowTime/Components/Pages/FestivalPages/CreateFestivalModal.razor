@@ -29,13 +29,18 @@
                 <!-- Duration -->
                 <Field>
                     <Label>Start Date</Label>
-                    <DateEdit @bind-Date="_festivalToCreate.StartDate"
-                              Min="@DateTime.Today" />
+                    <DateEdit @bind-Date="@StartDate"
+                              Max="@EndDate"
+                              TValue="DateTime?"
+                              Placeholder="Start Date" />
                 </Field>
+
                 <Field>
                     <Label>End Date</Label>
-                    <DateEdit @bind-Date="_festivalToCreate.EndDate"
-                              Max="@DateTime.Today.AddYears(2)" />
+                    <DateEdit @bind-Date="@EndDate"
+                              Min="@StartDate"
+                              TValue="DateTime?"
+                              Placeholder="End Date" />
                 </Field>
 
                 <!-- Bands -->
@@ -49,10 +54,28 @@
                         @foreach (var band in _bands)
                         {
                             <Check TValue="bool"
-                                   Checked="_selectedBandsIds.Contains(band.Id)"
+                                   Checked="@(_selectedFestivalBands.Any(fb => fb.BandId == band.Id))"
                                    CheckedChanged="checkedValue => OnBandCheckedChanged(checkedValue, band)">
                                 @band.Name
                             </Check>
+                        }
+                    }
+                </Field>
+
+                <!-- Lineup -->
+                <Field>
+                    <Label>
+                        <Strong>Lineup</Strong>
+                    </Label>
+                    @if (_selectedFestivalBands != null)
+                    {
+                        @foreach (FestivalBand fb in _selectedFestivalBands)
+                        {
+                            <Card>
+                                <CardBody>
+                                    @fb.Order . @fb.Band?.Name
+                                </CardBody>
+                            </Card>
                         }
                     }
                 </Field>
@@ -78,18 +101,18 @@
     private bool modalVisible;
     private Festival _festivalToCreate = new Festival();
     private List<Band>? _bands;
-    private HashSet<Guid> _selectedBandsIds = new();
+    private List<FestivalBand> _selectedFestivalBands = new();
+
+    private DateTime? StartDate { get; set; } = DateTime.Today;
+    private DateTime? EndDate { get; set; } = DateTime.Today.AddDays(1);
 
     public async Task ShowModal()
     {
-        _festivalToCreate = new Festival
-        {
-            StartDate = DateTime.Today,
-            EndDate = DateTime.Today
-        };
-        modalVisible = true;
+        _festivalToCreate = new Festival();
         _bands = (await BandRepository.GetAllAsync()).ToList();
-        _selectedBandsIds.Clear();
+        _selectedFestivalBands.Clear();
+
+        modalVisible = true;
     }
 
     private void HideModal()
@@ -100,23 +123,34 @@
     private void OnBandCheckedChanged(bool checkedValue, Band band)
     {
         if (checkedValue)
-            _selectedBandsIds.Add(band.Id);
+        {
+            var newFestivalBand = new FestivalBand()
+            {
+                FestivalId = _festivalToCreate.Id,
+                BandId = band.Id,
+                Band = band,
+                Order = _selectedFestivalBands.Count()
+            };
+            _selectedFestivalBands.Add(newFestivalBand);
+        }
         else
-            _selectedBandsIds.Remove(band.Id);
+        {
+            _selectedFestivalBands.RemoveAll(fb => fb.BandId == band.Id);
+            int index = 0;
+            foreach (FestivalBand fb in _selectedFestivalBands)
+            {
+                fb.Order = index++;
+            }
+        }
     }
 
     private async Task HandleCreate()
     {
-        if (_festivalToCreate != null && _bands != null)
+        if (_festivalToCreate != null)
         {
-            _festivalToCreate.FestivalBands = _selectedBandsIds
-                .Select(bandId => new FestivalBand
-                {
-                    FestivalId = _festivalToCreate.Id,
-                    BandId = bandId,
-                    Order = 0 // to be changed
-                })
-                .ToList();
+            _festivalToCreate.StartDate = StartDate ?? DateTime.MinValue;
+            _festivalToCreate.EndDate = EndDate ?? DateTime.MinValue;
+            _festivalToCreate.FestivalBands = _selectedFestivalBands;
 
             await FestivalRepository.AddAsync(_festivalToCreate);
             await FestivalRepository.SaveChangesAsync();
