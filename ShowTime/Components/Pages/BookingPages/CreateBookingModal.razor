@@ -12,7 +12,12 @@
                     <Label>
                         <Strong>Festival</Strong>
                     </Label>
-                    <Select TValue="Guid" @bind-SelectedValue="_bookingToCreate.ApplicationUserId">
+                    <Select TValue="Guid"
+                            @bind-SelectedValue="_bookingToCreate.FestivalId"
+                            @onchange="OnFestivalSelected">
+                        <SelectItem Value="@Guid.Empty" disabled selected>
+                            -- Select a festival --
+                        </SelectItem>
                         @if (_festivals != null)
                         {
                             @foreach (Festival f in _festivals)
@@ -21,6 +26,19 @@
                             }
                         }
                     </Select>
+                </Field>
+
+                <Field>
+                    <Label>
+                        <Strong>Booking Options</Strong>
+                    </Label>
+                    <RadioGroup TValue="int"
+                                @bind-Value="_bookingOption"
+                                Disabled="@(_selectedFestival == null)"
+                                @onchange="OnBookingOptionChanged">
+                        <Radio Value="1">Full Access</Radio>
+                        <Radio Value="2">Individual Day</Radio>
+                    </RadioGroup>
                 </Field>
 
                 <ModalFooter>
@@ -47,9 +65,49 @@
     private Booking _bookingToCreate = new Booking();
     private List<Festival>? _festivals;
 
+    private Festival? _selectedFestival = null;
+    private int _bookingOption = 0; // 0 default 1 Full Access 2 Individual Day
+
+    private void OnBookingOptionChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var value))
+        {
+            _bookingOption = value;
+            SetBookingDatesForOption();
+        }
+    }
+
+    private void OnFestivalSelected(ChangeEventArgs e)
+    {
+        _bookingOption = 0; // Reset booking option when festival is selected
+        if (Guid.TryParse(e.Value?.ToString(), out var selectedFestivalId))
+        {
+            _bookingToCreate.FestivalId = selectedFestivalId;
+            _selectedFestival = _festivals?.FirstOrDefault(f => f.Id == selectedFestivalId);
+            Console.WriteLine($"Selected Festival: {_selectedFestival?.Name}");
+        }
+        else
+        {
+            _bookingToCreate.FestivalId = default(Guid);
+            _selectedFestival = null;
+            Console.WriteLine("No valid festival selected.");
+        }
+    }
+
+    private void SetBookingDatesForOption()
+    {
+        if (_bookingOption == 1 && _selectedFestival != null)
+        {
+            _bookingToCreate.StartDate = _selectedFestival.StartDate;
+            _bookingToCreate.EndDate = _selectedFestival.EndDate;
+        }
+    }
+
     public async Task ShowModal(Guid userId)
     {
         modalVisible = true;
+        _bookingOption = 0;
+        _selectedFestival = null;
         UserId = userId;
         _bookingToCreate = new Booking
         {

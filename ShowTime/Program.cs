@@ -21,6 +21,8 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -57,6 +59,7 @@ builder.Services.AddScoped<IBandRepository, BandRepository>();
 builder.Services.AddScoped<IFestivalRepository, FestivalRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
+builder.Services.AddScoped<IApplicationUserRepository, ApplicationUserRepository>();
 
 var app = builder.Build();
 

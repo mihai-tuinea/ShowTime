@@ -1,7 +1,5 @@
 ﻿@page "/bookings"
-@rendermode InteractiveServer
-@using Microsoft.AspNetCore.Components.Authorization
-@using System.Security.Claims
+
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -13,17 +11,19 @@
 
 <DataGrid TItem="Booking"
           Data="@_bookings">
-    <DataGridColumn TItem="Booking" Field="@nameof(Booking.Festival.Name)" Caption="Booked Festival" />
+
 </DataGrid>
+
 
 <Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
 
 @code {
     [Inject]
     public required IBookingRepository BookingRepository { get; set; }
+    [Inject]
+    public required IApplicationUserRepository ApplicationUserRepository { get; set; }
 
     private CreateBookingModal? _createModal;
-
 
     private List<Booking> _bookings = new();
     private Guid? _userId;
@@ -53,6 +53,12 @@
                     _bookings = (await BookingRepository.GetBookingsByUserIdAsync(userId)).ToList();
                 }
             }
+        }
+
+        List<ApplicationUser> users = (await ApplicationUserRepository.GetAllAsync()).ToList();
+        foreach (var u in users)
+        {
+            Console.WriteLine(u.Email);
         }
     }
 

@@ -1,38 +1,41 @@
 ﻿@page "/bands"
-@rendermode InteractiveServer
-
-<PageTitle>Bands</PageTitle>
 
 <h1>Bands</h1>
 
-<CreateBandModal @ref="_createModal" OnCreated="ReloadBands" />
-<DeleteBandModal @ref="_deleteModal" OnDeleted="ReloadBands" />
-<UpdateBandModal @ref="_updateModal" OnUpdated="ReloadBands" />
+<PageTitle>Bands</PageTitle>
+@if (_bands == null)
+{
+}
+else
+{
+    <CreateBandModal @ref="_createModal" OnCreated="ReloadBands" />
+    <DeleteBandModal @ref="_deleteModal" OnDeleted="ReloadBands" />
+    <UpdateBandModal @ref="_updateModal" OnUpdated="ReloadBands" />
 
-<DataGrid TItem="Band"
-          Data="@_bands">
-    <DataGridColumn TItem="Band" Field="@nameof(Band.Name)" Caption="Name" />
-    <DataGridColumn TItem="Band" Field="@nameof(Band.Genre)" Caption="Genre" />
+    <DataGrid TItem="Band"
+              Data="@_bands">
+        <DataGridColumn TItem="Band" Field="@nameof(Band.Name)" Caption="Name" />
+        <DataGridColumn TItem="Band" Field="@nameof(Band.Genre)" Caption="Genre" />
 
-    <DataGridColumn TItem="Band" Caption="Actions">
-        <DisplayTemplate>
-            <Button Color="Color.Primary" Size="Size.Small" Clicked="e => ShowUpdateModal(context)">
-                <Blazorise.Icon Name="IconName.Edit" />
-            </Button>
-            <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(context)">
-                <Blazorise.Icon Name="IconName.Delete" />
-            </Button>
-        </DisplayTemplate>
-    </DataGridColumn>
-</DataGrid>
+        <DataGridColumn TItem="Band" Caption="Actions">
+            <DisplayTemplate>
+                <Button Color="Color.Primary" Size="Size.Small" Clicked="e => ShowUpdateModal(context)">
+                    <Blazorise.Icon Name="IconName.Edit" />
+                </Button>
+                <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(context)">
+                    <Blazorise.Icon Name="IconName.Delete" />
+                </Button>
+            </DisplayTemplate>
+        </DataGridColumn>
+    </DataGrid>
 
-<Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
-
+    <Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
+}
 @code {
     [Inject]
     public required IBandRepository BandRepository { get; set; }
 
-    private List<Band> _bands = new();
+    private List<Band>? _bands;
     private CreateBandModal? _createModal;
     private DeleteBandModal? _deleteModal;
     private UpdateBandModal? _updateModal;

@@ -1,9 +1,22 @@
 ﻿@page "/festivals"
-@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
 
 <PageTitle>Festivals</PageTitle>
 
-<h1>Festivals</h1>
+@if(_festivals == null)
+{
+}
+else 
+{
+<div>
+    <h1>Festivals</h1>
+    <AuthorizeView Roles="admin">
+        <Authorized>
+            <Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
+            <br />
+        </Authorized>
+    </AuthorizeView>
+</div>
 
 <CreateFestivalModal @ref="_createModal" OnCreated="ReloadFestivals" />
 <DeleteFestivalModal @ref="_deleteModal" OnDeleted="ReloadFestivals" />
@@ -39,9 +52,6 @@
 </DataGrid>
 *@
 
-<Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
-<br />
-
 <TextEdit Placeholder="Search by festival name.."
           Text="@_searchTerm"
           TextChanged="FilterFestivals"></TextEdit>
@@ -72,13 +82,13 @@
     }
 </CardDeck>
 
-
+}
 
 @code {
     [Inject]
     public required IFestivalRepository FestivalRepository { get; set; }
 
-    private List<Festival> _festivals = new();
+    private List<Festival>? _festivals;
     private List<Festival> _filteredFestivals = new();
     private string _searchTerm = string.Empty;
     private CreateFestivalModal? _createModal;
