@@ -11,5 +11,6 @@ namespace ShowTime.Entities
         public Festival? Festival { get; set; }
         public Guid ApplicationUserId { get; set; }
         public ApplicationUser? ApplicationUser { get; set; }
+        public float? Cost { get; set; }
     }
 }

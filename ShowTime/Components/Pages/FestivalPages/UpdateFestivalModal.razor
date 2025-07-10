@@ -28,7 +28,10 @@
 
                 <!-- Duration -->
                 <Field>
-                    <Label>Start Date</Label>
+                    <Label>
+                        <Strong>Start Date</Strong>
+                    </Label>
+                    <br />
                     <DateEdit @bind-Date="@StartDate"
                               Max="@EndDate"
                               TValue="DateTime?"
@@ -36,7 +39,10 @@
                 </Field>
 
                 <Field>
-                    <Label>End Date</Label>
+                    <Label>
+                        <Strong>End Date</Strong>
+                    </Label>
+                    <br />
                     <DateEdit @bind-Date="@EndDate"
                               Min="@StartDate"
                               TValue="DateTime?"
@@ -73,7 +79,7 @@
                         {
                             <Card>
                                 <CardBody>
-                                    @fb.Order . @fb.Band?.Name
+                                    <Strong>@(fb.Order + 1).</Strong> @fb.Band?.Name
                                 </CardBody>
                             </Card>
                         }
@@ -118,7 +124,9 @@
         };
         StartDate = _originalFestival.StartDate;
         EndDate = _originalFestival.EndDate;
-        _selectedFestivalBands = _originalFestival.FestivalBands.ToList();
+        _selectedFestivalBands = _originalFestival.FestivalBands
+            .OrderBy(fb => fb.Order)
+            .ToList();
 
         _bands = (await BandRepository.GetAllAsync()).ToList();
 

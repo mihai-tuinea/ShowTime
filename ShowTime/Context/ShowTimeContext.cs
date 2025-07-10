@@ -14,6 +14,7 @@ namespace ShowTime.Context
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Festival> Festivals { get; set; }
         public DbSet<FestivalBand> FestivalBands { get; set; }
+        public DbSet<Member> Members { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,6 +33,5 @@ namespace ShowTime.Context
 
             base.OnModelCreating(modelBuilder);
         }
-        // public DbSet<Member> Members { get; set; }
     }
 }

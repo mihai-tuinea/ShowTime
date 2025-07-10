@@ -14,5 +14,7 @@ namespace ShowTime.Entities
         public DateTime EndDate { get; set; }
         public ICollection<FestivalBand> FestivalBands { get; set; } = [];
         public ICollection<Booking> Bookings { get; set; } = [];
+        public float? PricePerDay { get; set; }
+        public byte[]? Image { get; set; }
     }
 }

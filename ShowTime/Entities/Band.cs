@@ -10,6 +10,7 @@ namespace ShowTime.Entities
         public string? Name { get; set; }
         public Genre Genre { get; set; }
         public ICollection<FestivalBand> FestivalBands { get; set; } = [];
-        // public ICollection<Member> Members { get; set; } = [];
+        public ICollection<Member> Members { get; set; } = [];
+        public byte[]? Image { get; set; }
     }
 }

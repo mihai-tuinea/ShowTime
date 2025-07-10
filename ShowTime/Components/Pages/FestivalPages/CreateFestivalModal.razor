@@ -28,7 +28,10 @@
 
                 <!-- Duration -->
                 <Field>
-                    <Label>Start Date</Label>
+                    <Label>
+                        <Strong>Start Date</Strong>
+                    </Label>
+                    <br />
                     <DateEdit @bind-Date="@StartDate"
                               Max="@EndDate"
                               TValue="DateTime?"
@@ -36,11 +39,22 @@
                 </Field>
 
                 <Field>
-                    <Label>End Date</Label>
+                    <Label>
+                        <Strong>End Date</Strong>
+                    </Label>
+                    <br />
                     <DateEdit @bind-Date="@EndDate"
                               Min="@StartDate"
                               TValue="DateTime?"
                               Placeholder="End Date" />
+                </Field>
+
+                <!-- Image -->
+                <Field>
+                    <Label>
+                        <Strong>Image (optional)</Strong>
+                    </Label>
+                    <FilePicker Upload="OnFileUpload" />
                 </Field>
 
                 <!-- Bands -->
@@ -73,7 +87,7 @@
                         {
                             <Card>
                                 <CardBody>
-                                    @fb.Order . @fb.Band?.Name
+                                    <Strong>@(fb.Order + 1).</Strong> @fb.Band?.Name
                                 </CardBody>
                             </Card>
                         }
@@ -141,6 +155,19 @@
             {
                 fb.Order = index++;
             }
+        }
+    }
+
+    private async Task OnFileUpload(FileUploadEventArgs e)
+    {
+        var file = e.File;
+
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream();
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            _festivalToCreate.Image = memoryStream.ToArray();
         }
     }
 

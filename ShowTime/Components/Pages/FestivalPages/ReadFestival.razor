@@ -3,84 +3,70 @@
 
 <PageTitle>Festivals</PageTitle>
 
+<h1>Festivals</h1>
+
 @if (_festivals == null)
 {
 }
 else
 {
-    <div>
-        <h1>Festivals</h1>
-        <AuthorizeView Roles="admin">
-            <Authorized>
-                <Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
-                <br />
-            </Authorized>
-        </AuthorizeView>
-    </div>
+
+
+    <AuthorizeView Roles="admin">
+        <Authorized>
+            <Button Color="Color.Primary" Clicked="ShowCreateModal">Create</Button>
+            <br />
+        </Authorized>
+    </AuthorizeView>
+
 
     <CreateFestivalModal @ref="_createModal" OnCreated="ReloadFestivals" />
     <DeleteFestivalModal @ref="_deleteModal" OnDeleted="ReloadFestivals" />
     <UpdateFestivalModal @ref="_updateModal" OnUpdated="ReloadFestivals" />
-
-    @*
-<DataGrid TItem="Festival"
-          Data="@_festivals">
-    <DataGridColumn TItem="Festival" Field="@nameof(Festival.Name)" Caption="Name" />
-    <DataGridColumn TItem="Festival" Field="@nameof(Festival.Location)" Caption="Location" />
-    <DataGridColumn TItem="Festival" Field="@nameof(Festival.StartDate)" Caption="Start Date">
-        <DisplayTemplate>
-            @context.StartDate.ToString("dd-MM-yyyy")
-        </DisplayTemplate>
-    </DataGridColumn>
-
-    <DataGridColumn TItem="Festival" Field="@nameof(Festival.EndDate)" Caption="End Date">
-        <DisplayTemplate>
-            @context.EndDate.ToString("dd-MM-yyyy")
-        </DisplayTemplate>
-    </DataGridColumn>
-
-    <DataGridColumn TItem="Festival" Caption="Actions">
-        <DisplayTemplate>
-            <Button Color="Color.Primary" Size="Size.Small" Clicked="e => ShowUpdateModal(context)">
-                <Blazorise.Icon Name="IconName.Edit" />
-            </Button>
-            <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(context)">
-                <Blazorise.Icon Name="IconName.Delete" />
-            </Button>
-        </DisplayTemplate>
-    </DataGridColumn>
-</DataGrid>
-*@
 
     <TextEdit Placeholder="Search by festival name.."
               Text="@_searchTerm"
               TextChanged="FilterFestivals"></TextEdit>
     <br />
 
-    <CardDeck>
-        @if (_festivals != null)
+    <div class="card-container">
+        @if (_filteredFestivals != null)
         {
             @foreach (Festival festival in _filteredFestivals)
             {
-                <Card>
-                    <CardBody>
-                        <CardTitle Size="5"><Strong>@festival.Name</Strong></CardTitle>
-                        <br />
-                        <CardSubtitle>Location: @festival.Location</CardSubtitle>
-                        <br />
-                        <CardSubtitle>@festival.StartDate.ToString("dd-MM-yyyy") to @festival.EndDate.ToString("dd-MM-yyyy")</CardSubtitle>
-                        <br />
+                <Card Class="festival-card">
+                    <CardImage Source="@(
+                               festival.Image != null
+                               ? $"data:image/jpeg;base64,{Convert.ToBase64String(festival.Image)}"
+                               : "/images/festivalPlaceholder.png")"
+                   Class="festival-card-image" />
+        <CardBody>
+            <CardTitle Size="5" Class="festival-card-title">
+                <Strong>@festival.Name</Strong>
+            </CardTitle>
+            <CardSubtitle Class="festival-card-subtitle">
+                Location: @festival.Location
+            </CardSubtitle>
+            <CardSubtitle Class="festival-card-subtitle">
+                @festival.StartDate.ToString("dd-MM-yyyy") to @festival.EndDate.ToString("dd-MM-yyyy")
+            </CardSubtitle>
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    <div class="festival-card-actions">
                         <Button Color="Color.Primary" Size="Size.Small" Clicked="e => ShowUpdateModal(festival)">
                             <Blazorise.Icon Name="IconName.Edit" />
                         </Button>
                         <Button Color="Color.Danger" Size="Size.Small" Clicked="e => ShowDeleteModal(festival)">
                             <Blazorise.Icon Name="IconName.Delete" />
                         </Button>
-                    </CardBody>
-                </Card>
-            }
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </CardBody>
+    </Card>
         }
-    </CardDeck>
+        }
+    </div>
 
 }
 
@@ -144,3 +130,49 @@ else
         }
     }
 }
+
+<style>
+    .card-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .festival-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .festival-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+    .festival-card-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .festival-card-title {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .festival-card-subtitle {
+        font-size: 0.9rem;
+        color: #555;
+        margin-bottom: 0.5rem;
+    }
+
+    .festival-card-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+    }
+</style>
